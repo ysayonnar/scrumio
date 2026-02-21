@@ -1,7 +1,7 @@
 package com.example.scrumio.mapper;
 
-import com.example.scrumio.dto.TicketRequest;
-import com.example.scrumio.dto.TicketResponse;
+import com.example.scrumio.web.dto.TicketRequest;
+import com.example.scrumio.web.dto.TicketResponse;
 import com.example.scrumio.entity.Ticket;
 import org.springframework.stereotype.Component;
 

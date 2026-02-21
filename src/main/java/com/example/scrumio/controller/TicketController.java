@@ -1,7 +1,7 @@
 package com.example.scrumio.controller;
 
-import com.example.scrumio.dto.TicketRequest;
-import com.example.scrumio.dto.TicketResponse;
+import com.example.scrumio.web.dto.TicketRequest;
+import com.example.scrumio.web.dto.TicketResponse;
 import com.example.scrumio.service.TicketService;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +21,12 @@ public class TicketController {
     @GetMapping
     public List<TicketResponse> getAll() {
         return service.getAll();
+    }
+
+    // TODO: move it tot getAll
+    @GetMapping("/filter")
+    public List<TicketResponse> getByStatus(@RequestParam String status) {
+        return service.getByStatus(status);
     }
 
     @GetMapping("/{id}")

@@ -1,8 +1,11 @@
 package com.example.scrumio.service;
 
-import com.example.scrumio.dto.TicketRequest;
-import com.example.scrumio.dto.TicketResponse;
+import com.example.scrumio.entity.TicketStatus;
+import com.example.scrumio.entity.exception.BadTicketStatusException;
+import com.example.scrumio.web.dto.TicketRequest;
+import com.example.scrumio.web.dto.TicketResponse;
 import com.example.scrumio.entity.Ticket;
+import com.example.scrumio.entity.exception.TicketNotFoundException;
 import com.example.scrumio.mapper.TicketMapper;
 import com.example.scrumio.repository.TicketRepository;
 import org.springframework.stereotype.Service;
@@ -31,8 +34,16 @@ public class TicketService {
 
     public TicketResponse getByID(UUID id) {
         Ticket ticket = repository.findByID(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() -> new TicketNotFoundException(id));
         return mapper.toResponse(ticket);
+    }
+
+    public List<TicketResponse> getByStatus(String status){
+        TicketStatus s = TicketStatus.from(status)
+                .orElseThrow(() -> new BadTicketStatusException(status));
+        return repository.findByStatus(s).stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     public TicketResponse create(TicketRequest request) {

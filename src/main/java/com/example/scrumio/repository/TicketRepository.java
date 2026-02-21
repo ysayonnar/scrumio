@@ -1,6 +1,7 @@
 package com.example.scrumio.repository;
 
 import com.example.scrumio.entity.Ticket;
+import com.example.scrumio.entity.TicketStatus;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -23,7 +24,10 @@ public class TicketRepository {
     }
 
     public List<Ticket> findAll() {
-        return tickets.values().stream().filter(t -> t.getDeletedAt() == null).toList();
+        return tickets.values()
+                .stream()
+                .filter(t -> t.getDeletedAt() == null)
+                .toList();
     }
 
     public Optional<Ticket> findByID(UUID id) {
@@ -33,6 +37,13 @@ public class TicketRepository {
         }
 
         return Optional.of(ticket);
+    }
+
+    public List<Ticket> findByStatus(TicketStatus status){
+        return tickets.values()
+                .stream()
+                .filter(t -> t.getStatus() == status)
+                .toList();
     }
 
     public Optional<Ticket> deleteByID(UUID id){

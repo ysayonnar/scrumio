@@ -1,4 +1,4 @@
-package com.example.scrumio.dto;
+package com.example.scrumio.web.dto;
 
 import com.example.scrumio.entity.TicketPriority;
 import com.example.scrumio.entity.TicketStatus;
