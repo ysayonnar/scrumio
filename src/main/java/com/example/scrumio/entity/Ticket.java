@@ -13,7 +13,7 @@ public class Ticket {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
-    private UUID sprintId;
+    private UUID sprintID;
 
     public Ticket() {}
 
@@ -23,7 +23,7 @@ public class Ticket {
         this.priority = priority;
         this.status = status;
         this.estimation = estimation;
-        this.sprintId = sprintId;
+        this.sprintID = sprintId;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -54,6 +54,6 @@ public class Ticket {
     public LocalDateTime getDeletedAt() { return deletedAt; }
     public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 
-    public UUID getSprintId() { return sprintId; }
-    public void setSprintId(UUID sprintId) { this.sprintId = sprintId; }
+    public UUID getSprintID() { return sprintID; }
+    public void setSprintID(UUID sprintID) { this.sprintID = sprintID; }
 }
