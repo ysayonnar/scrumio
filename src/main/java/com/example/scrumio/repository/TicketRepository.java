@@ -1,13 +1,16 @@
 package com.example.scrumio.repository;
 
-import java.util.*;
-
 import com.example.scrumio.entity.Ticket;
 import com.example.scrumio.entity.TicketPriority;
 import com.example.scrumio.entity.TicketStatus;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class TicketRepository {
@@ -15,8 +18,8 @@ public class TicketRepository {
 
     public Ticket save(Ticket ticket) {
         if (ticket.getId() == null) {
-           ticket.setId(UUID.randomUUID());
-           ticket.setCreatedAt(LocalDateTime.now());
+            ticket.setId(UUID.randomUUID());
+            ticket.setCreatedAt(LocalDateTime.now());
         } else {
             ticket.setUpdatedAt(LocalDateTime.now());
         }
@@ -36,16 +39,16 @@ public class TicketRepository {
 
     public Optional<Ticket> findByID(UUID id) {
         Ticket ticket = tickets.get(id);
-        if(ticket == null || ticket.getDeletedAt() != null){
+        if (ticket == null || ticket.getDeletedAt() != null) {
             return Optional.empty();
         }
 
         return Optional.of(ticket);
     }
 
-    public Optional<Ticket> deleteByID(UUID id){
+    public Optional<Ticket> deleteByID(UUID id) {
         Ticket ticket = tickets.get(id);
-        if(ticket == null || ticket.getDeletedAt() != null){
+        if (ticket == null || ticket.getDeletedAt() != null) {
             return Optional.empty();
         }
 

@@ -1,13 +1,13 @@
 package com.example.scrumio.mapper;
 
+import com.example.scrumio.entity.Ticket;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
-import com.example.scrumio.entity.Ticket;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TicketMapper {
-    public Ticket toEntity(TicketRequest request){
+    public Ticket toEntity(TicketRequest request) {
         return new Ticket(
                 request.title(),
                 request.description(),
@@ -18,7 +18,7 @@ public class TicketMapper {
         );
     }
 
-    public TicketResponse toResponse(Ticket ticket){
+    public TicketResponse toResponse(Ticket ticket) {
         return new TicketResponse(
                 ticket.getId(),
                 ticket.getTitle(),

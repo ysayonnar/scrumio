@@ -15,9 +15,11 @@ public class Ticket {
     private LocalDateTime deletedAt;
     private UUID sprintID;
 
-    public Ticket() {}
+    public Ticket() {
+    }
 
-    public Ticket(String title, String description, TicketPriority priority, TicketStatus status, int estimation, UUID sprintId) {
+    public Ticket(String title, String description, TicketPriority priority, TicketStatus status, int estimation,
+                  UUID sprintId) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -27,33 +29,83 @@ public class Ticket {
         this.createdAt = LocalDateTime.now();
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public UUID getId() {
+        return id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getTitle() {
+        return title;
+    }
 
-    public TicketPriority getPriority() { return priority; }
-    public void setPriority(TicketPriority priority) { this.priority = priority; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public TicketStatus getStatus() { return status; }
-    public void setStatus(TicketStatus status) { this.status = status; }
+    public String getDescription() {
+        return description;
+    }
 
-    public int getEstimation() { return estimation; }
-    public void setEstimation(int estimation) { this.estimation = estimation; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public TicketPriority getPriority() {
+        return priority;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setPriority(TicketPriority priority) {
+        this.priority = priority;
+    }
 
-    public LocalDateTime getDeletedAt() { return deletedAt; }
-    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public TicketStatus getStatus() {
+        return status;
+    }
 
-    public UUID getSprintID() { return sprintID; }
-    public void setSprintID(UUID sprintID) { this.sprintID = sprintID; }
+    public void setStatus(TicketStatus status) {
+        this.status = status;
+    }
+
+    public int getEstimation() {
+        return estimation;
+    }
+
+    public void setEstimation(int estimation) {
+        this.estimation = estimation;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public UUID getSprintID() {
+        return sprintID;
+    }
+
+    public void setSprintID(UUID sprintID) {
+        this.sprintID = sprintID;
+    }
 }

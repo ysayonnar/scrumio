@@ -17,4 +17,5 @@ public record TicketResponse(
         LocalDateTime updatedAt,
         LocalDateTime deletedAt,
         UUID sprintID
-){}
+) {
+}

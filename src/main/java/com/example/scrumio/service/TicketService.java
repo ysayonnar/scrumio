@@ -27,13 +27,13 @@ public class TicketService {
 
     public List<TicketResponse> getAll(String status, String priority) {
         TicketStatus s = null;
-        if(status != null){
+        if (status != null) {
             s = TicketStatus.from(status)
                     .orElseThrow(() -> new BadTicketStatusException(status));
         }
 
         TicketPriority p = null;
-        if(priority != null){
+        if (priority != null) {
             p = TicketPriority.from(priority)
                     .orElseThrow(() -> new BadTicketPriorityException(priority));
         }

@@ -3,7 +3,7 @@ package com.example.scrumio.entity;
 import java.util.Arrays;
 import java.util.Optional;
 
-public enum TicketStatus{
+public enum TicketStatus {
     BACKLOG,
     TODO,
     IN_PROGRESS,
