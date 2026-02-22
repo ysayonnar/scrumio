@@ -1,6 +1,8 @@
 package com.example.scrumio.repository;
 
 import com.example.scrumio.entity.Ticket;
+import com.example.scrumio.entity.TicketPriority;
+import com.example.scrumio.entity.TicketStatus;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -22,8 +24,13 @@ public class TicketRepository {
         return ticket;
     }
 
-    public List<Ticket> findAll() {
-        return tickets.values().stream().filter(t -> t.getDeletedAt() == null).toList();
+    public List<Ticket> findAll(TicketStatus status, TicketPriority priority) {
+        return tickets.values()
+                .stream()
+                .filter(t -> t.getDeletedAt() == null)
+                .filter(t -> status == null || t.getStatus() == status)
+                .filter(t -> priority == null || t.getPriority() == priority)
+                .toList();
     }
 
     public Optional<Ticket> findByID(UUID id) {
@@ -37,7 +44,7 @@ public class TicketRepository {
 
     public Optional<Ticket> deleteByID(UUID id){
         Ticket ticket = tickets.get(id);
-        if(ticket == null){
+        if(ticket == null || ticket.getDeletedAt() != null){
             return Optional.empty();
         }
 
