@@ -1,11 +1,13 @@
 package com.example.scrumio.web.dto;
 
+
+import jakarta.validation.constraints.*;
+
 import com.example.scrumio.entity.TicketPriority;
 import com.example.scrumio.entity.TicketStatus;
 
 import java.util.UUID;
 
-import jakarta.validation.constraints.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record TicketRequest(
