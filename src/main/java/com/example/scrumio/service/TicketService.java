@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-// TODO: add more complex business logic
-// TODO: refactor errors
 @Service
 public class TicketService {
     private final TicketRepository repository;
@@ -27,9 +25,8 @@ public class TicketService {
         this.mapper = mapper;
     }
 
-    // TODO: maybe add dto for list
     public List<TicketResponse> getAll(String status, String priority) {
-        TicketStatus s = null; // TODO: maybe no need to this
+        TicketStatus s = null;
         if(status != null){
             s = TicketStatus.from(status)
                     .orElseThrow(() -> new BadTicketStatusException(status));
@@ -52,14 +49,6 @@ public class TicketService {
         return mapper.toResponse(ticket);
     }
 
-    public List<TicketResponse> getByStatus(String status){
-        TicketStatus s = TicketStatus.from(status)
-                .orElseThrow(() -> new BadTicketStatusException(status));
-        return repository.findByStatus(s).stream()
-                .map(mapper::toResponse)
-                .toList();
-    }
-
     public TicketResponse create(TicketRequest request) {
         Ticket ticket = mapper.toEntity(request);
         Ticket savedTicket = repository.save(ticket);
@@ -67,15 +56,20 @@ public class TicketService {
     }
 
     public TicketResponse update(UUID id, TicketRequest request) {
+        Ticket prevTicket = repository.findByID(id)
+                .orElseThrow(() -> new TicketNotFoundException(id));
+
         Ticket ticket = mapper.toEntity(request);
         ticket.setId(id);
+        ticket.setCreatedAt(prevTicket.getCreatedAt());
+
         Ticket savedTicket = repository.save(ticket);
         return mapper.toResponse(savedTicket);
     }
 
     public TicketResponse delete(UUID id) {
         Ticket deletedTicket = repository.deleteByID(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() -> new TicketNotFoundException(id));
         return mapper.toResponse(deletedTicket);
     }
 }

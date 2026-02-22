@@ -42,16 +42,9 @@ public class TicketRepository {
         return Optional.of(ticket);
     }
 
-    public List<Ticket> findByStatus(TicketStatus status){
-        return tickets.values()
-                .stream()
-                .filter(t -> t.getStatus() == status)
-                .toList();
-    }
-
     public Optional<Ticket> deleteByID(UUID id){
         Ticket ticket = tickets.get(id);
-        if(ticket == null){
+        if(ticket == null || ticket.getDeletedAt() != null){
             return Optional.empty();
         }
 

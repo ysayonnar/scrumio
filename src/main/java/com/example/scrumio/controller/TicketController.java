@@ -3,6 +3,7 @@ package com.example.scrumio.controller;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
 import com.example.scrumio.service.TicketService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,14 +29,13 @@ public class TicketController {
     }
 
     @PostMapping
-    public TicketResponse create(@RequestBody TicketRequest request) {
+    public TicketResponse create(@RequestBody @Valid TicketRequest request) {
         return service.create(request);
     }
 
     @PutMapping("/{id}")
-    public TicketResponse update(@PathVariable UUID id, @RequestBody TicketRequest request) {
-        // TODO: new dto for updating and so on
-        return service.create(request);
+    public TicketResponse update(@PathVariable UUID id, @RequestBody @Valid TicketRequest request) {
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
