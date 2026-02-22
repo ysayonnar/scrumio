@@ -1,6 +1,8 @@
 package com.example.scrumio.service;
 
+import com.example.scrumio.entity.TicketPriority;
 import com.example.scrumio.entity.TicketStatus;
+import com.example.scrumio.entity.exception.BadTicketPriorityException;
 import com.example.scrumio.entity.exception.BadTicketStatusException;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
@@ -26,8 +28,20 @@ public class TicketService {
     }
 
     // TODO: maybe add dto for list
-    public List<TicketResponse> getAll() {
-        return repository.findAll().stream()
+    public List<TicketResponse> getAll(String status, String priority) {
+        TicketStatus s = null; // TODO: maybe no need to this
+        if(status != null){
+            s = TicketStatus.from(status)
+                    .orElseThrow(() -> new BadTicketStatusException(status));
+        }
+
+        TicketPriority p = null;
+        if(priority != null){
+            p = TicketPriority.from(priority)
+                    .orElseThrow(() -> new BadTicketPriorityException(priority));
+        }
+
+        return repository.findAll(s, p).stream()
                 .map(mapper::toResponse)
                 .toList();
     }

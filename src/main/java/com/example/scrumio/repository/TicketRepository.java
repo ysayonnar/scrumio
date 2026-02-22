@@ -1,6 +1,7 @@
 package com.example.scrumio.repository;
 
 import com.example.scrumio.entity.Ticket;
+import com.example.scrumio.entity.TicketPriority;
 import com.example.scrumio.entity.TicketStatus;
 import org.springframework.stereotype.Repository;
 
@@ -23,10 +24,12 @@ public class TicketRepository {
         return ticket;
     }
 
-    public List<Ticket> findAll() {
+    public List<Ticket> findAll(TicketStatus status, TicketPriority priority) {
         return tickets.values()
                 .stream()
                 .filter(t -> t.getDeletedAt() == null)
+                .filter(t -> status == null || t.getStatus() == status)
+                .filter(t -> priority == null || t.getPriority() == priority)
                 .toList();
     }
 

@@ -1,5 +1,6 @@
 package com.example.scrumio.web.exception;
 
+import com.example.scrumio.entity.exception.BadTicketPriorityException;
 import com.example.scrumio.entity.exception.BadTicketStatusException;
 import com.example.scrumio.entity.exception.TicketNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadTicketStatus(BadTicketStatusException ex) {
         ErrorResponse error = new ErrorResponse(
                 "UNKNOW_STATUS",
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+
+    @ExceptionHandler(BadTicketPriorityException.class)
+    public ResponseEntity<ErrorResponse> handleBadTicketPriority(BadTicketPriorityException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "UNKNOW_PRIORITY",
                 ex.getMessage()
         );
 

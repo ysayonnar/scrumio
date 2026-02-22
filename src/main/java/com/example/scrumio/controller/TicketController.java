@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-// TODO: add finding by status
 @RestController
 @RequestMapping("/api/v1/tickets")
 public class TicketController {
@@ -19,14 +18,8 @@ public class TicketController {
     }
 
     @GetMapping
-    public List<TicketResponse> getAll() {
-        return service.getAll();
-    }
-
-    // TODO: move it tot getAll
-    @GetMapping("/filter")
-    public List<TicketResponse> getByStatus(@RequestParam String status) {
-        return service.getByStatus(status);
+    public List<TicketResponse> getAll(@RequestParam(required = false) String status, @RequestParam(required = false) String priority) {
+        return service.getAll(status, priority);
     }
 
     @GetMapping("/{id}")
