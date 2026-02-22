@@ -5,8 +5,8 @@ import com.example.scrumio.entity.TicketPriority;
 import com.example.scrumio.entity.TicketStatus;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.*;
+import java.time.LocalDateTime;
 
 @Repository
 public class TicketRepository {

@@ -1,10 +1,10 @@
 package com.example.scrumio.controller;
 
+import org.springframework.web.bind.annotation.*;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
 import com.example.scrumio.service.TicketService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;

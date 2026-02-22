@@ -5,8 +5,8 @@ import com.example.scrumio.entity.TicketStatus;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record TicketRequest(
         @NotBlank( message = "title can't be blank" )
