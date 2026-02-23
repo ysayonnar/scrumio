@@ -24,7 +24,7 @@ public record TicketResponse(
         @JsonProperty("deleted_at")
         LocalDateTime deletedAt,
 
-        @JsonProperty("spring_id")
+        @JsonProperty("sprint_id")
         UUID sprintID
 ) {
 }
