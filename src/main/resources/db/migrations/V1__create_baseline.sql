@@ -9,8 +9,16 @@ CREATE TABLE IF NOT EXISTS ticket
     estimation  int,
     created_at  timestamptz DEFAULT now(),
     updated_at  timestamptz,
-    deleted_at  timestamptz
--- TODO: FK sprint_id
+    deleted_at  timestamptz,
+    sprint_id   uuid,
+    project_id  uuid NOT NULL,
+
+    CONSTRAINT sprint_id
+        FOREIGN KEY (id)
+            REFERENCES sprint (id),
+    CONSTRAINT project_id
+        FOREIGN KEY (id)
+            REFERENCES project (id)
 );
 
 -- ==================== sprint ===================
@@ -26,8 +34,12 @@ CREATE TABLE IF NOT EXISTS sprint
     estimation_type text NOT NULL,
     created_at      timestamptz default now(),
     updated_at      timestamptz,
-    deleted_at      timestamptz
--- TODO: FK project_id
+    deleted_at      timestamptz,
+    project_id      uuid NOT NULL,
+
+    CONSTRAINT project_id
+        FOREIGN KEY (id)
+            REFERENCES project (id)
 );
 
 -- ==================== meeting ==================
@@ -41,8 +53,17 @@ CREATE TABLE IF NOT EXISTS meeting
     ends_at     timestamptz NOT NULL,
     created_at  timestamptz DEFAULT now(),
     updated_at  timestamptz,
-    deleted_at  timestamptz
--- TODO: FK sprint_id
+    deleted_at  timestamptz,
+    sprint_id   uuid,
+    project_id  uuid        NOT NULL,
+
+    CONSTRAINT sprint_id
+        FOREIGN KEY (id)
+            REFERENCES sprint (id),
+
+    CONSTRAINT project_id
+        FOREIGN KEY (id)
+            REFERENCES project (id)
 );
 
 -- ==================== project ==================
@@ -53,8 +74,12 @@ CREATE TABLE IF NOT EXISTS project
     description text,
     created_at  timestamptz DEFAULT now(),
     updated_at  timestamptz,
-    deleted_at  timestamptz
--- TODO: FK owner_id
+    deleted_at  timestamptz,
+    owner_id    uuid NOT NULL,
+
+    CONSTRAINT owner_id
+        FOREIGN KEY (id)
+            REFERENCES "user" (id)
 );
 
 
@@ -71,4 +96,60 @@ CREATE TABLE IF NOT EXISTS "user"
     deleted_at    timestamptz
 );
 
--- TODO: 3 linking tables
+-- ==================== project_member ==================
+CREATE TABLE IF NOT EXISTS project_member
+(
+    id         uuid PRIMARY KEY,
+    role       text NOT NULL,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz,
+    deleted_at timestamptz,
+    user_id    uuid NOT NULL,
+    project_id uuid NOT NULL,
+
+    CONSTRAINT user_id
+        FOREIGN KEY (id)
+            REFERENCES "user" (id),
+
+    CONSTRAINT project_id
+        FOREIGN KEY (id)
+            REFERENCES project (id)
+);
+
+-- ==================== member_ticket ==================
+CREATE TABLE IF NOT EXISTS member_ticket
+(
+    id         uuid PRIMARY KEY,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz,
+    deleted_at timestamptz,
+    ticket_id  uuid NOT NULL,
+    member_id  uuid NOT NULL,
+
+    CONSTRAINT ticket_id
+        FOREIGN KEY (id)
+            REFERENCES ticket (id),
+
+    CONSTRAINT member_id
+        FOREIGN KEY (id)
+            REFERENCES project_member (id)
+);
+
+-- ==================== meeting_member ==================
+CREATE TABLE IF NOT EXISTS meeting_member
+(
+    id         uuid PRIMARY KEY,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz,
+    deleted_at timestamptz,
+    meeting_id uuid NOT NULL,
+    member_id  uuid NOT NULL,
+
+    CONSTRAINT meeting_id
+        FOREIGN KEY (id)
+            REFERENCES meeting (id),
+
+    CONSTRAINT member_id
+        FOREIGN KEY (id)
+            REFERENCES project_member (id)
+);
