@@ -1,4 +1,4 @@
-package com.example.scrumio.entity.projectmember;
+package com.example.scrumio.entity.project;
 
 public enum ProjectMemberRole {
     OWNER,
