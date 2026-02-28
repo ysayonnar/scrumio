@@ -20,7 +20,7 @@ CREATE TYPE sprint_status AS ENUM (
     'COMPLETED'
     );
 
-CREATE TYPE estimation_type AS ENUM (
+CREATE TYPE sprint_estimation_type AS ENUM (
     'STORY_POINTS',
     'HOURS'
     );
@@ -72,17 +72,17 @@ CREATE TABLE IF NOT EXISTS ticket
 CREATE TABLE IF NOT EXISTS sprint
 (
     id              uuid PRIMARY KEY,
-    name            text            NOT NULL,
+    name            text                   NOT NULL,
     business_goal   text,
     dev_plan        text,
-    start_date      DATE            NOT NULL,
-    end_date        DATE            NOT NULL,
-    status          sprint_status   NOT NULL,
-    estimation_type estimation_type NOT NULL,
+    start_date      DATE                   NOT NULL,
+    end_date        DATE                   NOT NULL,
+    status          sprint_status          NOT NULL,
+    estimation_type sprint_estimation_type NOT NULL,
     created_at      timestamptz default now(),
     updated_at      timestamptz,
     deleted_at      timestamptz,
-    project_id      uuid            NOT NULL,
+    project_id      uuid                   NOT NULL,
 
     CONSTRAINT project_id
         FOREIGN KEY (project_id)
