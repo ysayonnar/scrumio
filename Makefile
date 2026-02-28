@@ -11,3 +11,8 @@ postgres-down:
 
 todos:
 	grep -r "TODO:"
+
+apply-migrations:
+	./gradlew flywayMigrate
+	./gradlew flywayInfo
+	./gradlew flywayValidate

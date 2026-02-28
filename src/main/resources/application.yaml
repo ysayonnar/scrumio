@@ -1,4 +1,9 @@
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/scrumio_db
+    username: admin
+    password: admin
+
   jpa:
     hibernate:
       ddl-auto: validate

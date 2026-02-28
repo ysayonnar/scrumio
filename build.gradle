@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.flywaydb:flyway-core:10.21.0'
+        classpath 'org.flywaydb:flyway-database-postgresql:10.21.0'
+        classpath 'org.postgresql:postgresql:42.7.4'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.2'
@@ -22,8 +33,45 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def flywayConfig = {
+    return org.flywaydb.core.Flyway.configure()
+            .dataSource('jdbc:postgresql://localhost:5432/scrumio_db', 'admin', 'admin')
+            .locations("filesystem:${projectDir}/src/main/resources/db/migrations")
+            .load()
+}
+
+tasks.register('flywayMigrate') {
+    group = 'flyway'
+    description = 'Applies pending Flyway migrations'
+    doLast {
+        def result = flywayConfig().migrate()
+        println "Applied ${result.migrationsExecuted} migration(s)"
+    }
+}
+
+tasks.register('flywayInfo') {
+    group = 'flyway'
+    description = 'Prints the status of all migrations'
+    doLast {
+        flywayConfig().info().all().each { info ->
+            println "${info.version}\t${info.state}\t${info.description}"
+        }
+    }
+}
+
+tasks.register('flywayValidate') {
+    group = 'flyway'
+    description = 'Validates applied migrations against migration files'
+    doLast {
+        flywayConfig().validate()
+        println 'Validation successful'
+    }
 }
 
 tasks.named('test') {

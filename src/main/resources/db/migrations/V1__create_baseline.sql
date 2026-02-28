@@ -45,27 +45,34 @@ CREATE TYPE project_member_role AS ENUM (
     'MANAGER',
     'DEVELOPER'
     );
--- ==================== ticket ==================
-CREATE TABLE IF NOT EXISTS ticket
+
+-- ==================== user ==================
+CREATE TABLE IF NOT EXISTS "user"
+(
+    id            uuid PRIMARY KEY,
+    name          text        NOT NULL,
+    email         text UNIQUE NOT NULL,
+    password_hash text        NOT NULL,
+    role          user_role   NOT NULL,
+    created_at    timestamptz DEFAULT now(),
+    updated_at    timestamptz,
+    deleted_at    timestamptz
+);
+
+-- ==================== project ==================
+CREATE TABLE IF NOT EXISTS project
 (
     id          uuid PRIMARY KEY,
-    title       text          NOT NULL,
+    name        text NOT NULL,
     description text,
-    priority    ticket_priority,
-    status      ticket_status NOT NULL,
-    estimation  int,
     created_at  timestamptz DEFAULT now(),
     updated_at  timestamptz,
     deleted_at  timestamptz,
-    sprint_id   uuid,
-    project_id  uuid          NOT NULL,
+    owner_id    uuid NOT NULL,
 
-    CONSTRAINT sprint_id
-        FOREIGN KEY (sprint_id)
-            REFERENCES sprint (id),
-    CONSTRAINT project_id
-        FOREIGN KEY (project_id)
-            REFERENCES project (id)
+    CONSTRAINT owner_id
+        FOREIGN KEY (owner_id)
+            REFERENCES "user" (id)
 );
 
 -- ==================== sprint ===================
@@ -84,6 +91,29 @@ CREATE TABLE IF NOT EXISTS sprint
     deleted_at      timestamptz,
     project_id      uuid                   NOT NULL,
 
+    CONSTRAINT project_id
+        FOREIGN KEY (project_id)
+            REFERENCES project (id)
+);
+
+-- ==================== ticket ==================
+CREATE TABLE IF NOT EXISTS ticket
+(
+    id          uuid PRIMARY KEY,
+    title       text          NOT NULL,
+    description text,
+    priority    ticket_priority,
+    status      ticket_status NOT NULL,
+    estimation  int,
+    created_at  timestamptz DEFAULT now(),
+    updated_at  timestamptz,
+    deleted_at  timestamptz,
+    sprint_id   uuid,
+    project_id  uuid          NOT NULL,
+
+    CONSTRAINT sprint_id
+        FOREIGN KEY (sprint_id)
+            REFERENCES sprint (id),
     CONSTRAINT project_id
         FOREIGN KEY (project_id)
             REFERENCES project (id)
@@ -111,36 +141,6 @@ CREATE TABLE IF NOT EXISTS meeting
     CONSTRAINT project_id
         FOREIGN KEY (project_id)
             REFERENCES project (id)
-);
-
--- ==================== project ==================
-CREATE TABLE IF NOT EXISTS project
-(
-    id          uuid PRIMARY KEY,
-    name        text NOT NULL,
-    description text,
-    created_at  timestamptz DEFAULT now(),
-    updated_at  timestamptz,
-    deleted_at  timestamptz,
-    owner_id    uuid NOT NULL,
-
-    CONSTRAINT owner_id
-        FOREIGN KEY (owner_id)
-            REFERENCES "user" (id)
-);
-
-
--- ==================== user ==================
-CREATE TABLE IF NOT EXISTS "user"
-(
-    id            uuid PRIMARY KEY,
-    name          text        NOT NULL,
-    email         text UNIQUE NOT NULL,
-    password_hash text        NOT NULL,
-    role          user_role   NOT NULL,
-    created_at    timestamptz DEFAULT now(),
-    updated_at    timestamptz,
-    deleted_at    timestamptz
 );
 
 -- ==================== project_member ==================
