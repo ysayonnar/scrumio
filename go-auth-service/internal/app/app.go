@@ -25,8 +25,15 @@ func Run() {
 
 	log.Info("Connected to Postgres")
 
+	rdb, err := db.NewRedis(cfg)
+	if err != nil {
+		panic(fmt.Errorf("error connect to redis: %w", err))
+	}
+
+	log.Info("Connected to Redis")
+
 	mux := http.NewServeMux()
-	authRouter := handler.NewAuthRouter(cfg, log, pqConn)
+	authRouter := handler.NewAuthRouter(cfg, log, pqConn, rdb)
 	authRouter.RegisterRoutes(mux)
 
 	server := http.Server{

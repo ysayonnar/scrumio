@@ -14,6 +14,7 @@ type Config struct {
 	Env      string `env:"ENV"`
 	Server   Server
 	Postgres Postgres
+	Redis    Redis
 	JWT      JWT
 }
 
@@ -33,6 +34,13 @@ type Postgres struct {
 	DbPassword string `env:"DB_PASSWORD"`
 	DbName     string `env:"DB_NAME"`
 	DbSslMode  string `env:"DB_SSL_MODE"`
+}
+
+type Redis struct {
+	Host     string `env:"REDIS_HOST"`
+	Port     int    `env:"REDIS_PORT"`
+	Password string `env:"REDIS_PASSWORD"`
+	DB       int    `env:"REDIS_DB"`
 }
 
 type JWT struct {
