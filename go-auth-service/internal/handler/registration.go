@@ -15,9 +15,13 @@ import (
 	"github.com/lib/pq"
 )
 
-type RegistrationRequest struct {
+type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+func (r LoginRequest) IsValid() bool {
+	return !(len(r.Password) < 8 || !strings.Contains(r.Email, "@"))
 }
 
 func (r AuthRouter) Registration(w http.ResponseWriter, req *http.Request) {
@@ -34,14 +38,14 @@ func (r AuthRouter) Registration(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var body RegistrationRequest
+	var body LoginRequest
 	if err := json.Unmarshal(rawBody, &body); err != nil {
 		r.log.Error("unmarshal json error", logger.Err(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if len(body.Password) < 8 || !strings.Contains(body.Email, "@") {
+	if !body.IsValid() {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

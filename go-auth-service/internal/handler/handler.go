@@ -29,7 +29,7 @@ func (r AuthRouter) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {})
 
 	mux.HandleFunc("POST /registration", r.Registration)
-	//mux.HandleFunc("POST /login", r.Login)
+	mux.HandleFunc("POST /login", r.Login)
 	//mux.HandleFunc("GET /auth", r.Authenticate)
 	//mux.HandleFunc("Get /logout", r.Logout)
 }

@@ -14,6 +14,7 @@ type Config struct {
 	Env      string `env:"ENV"`
 	Server   Server
 	Postgres Postgres
+	JWT      JWT
 }
 
 type Server struct {
@@ -32,6 +33,12 @@ type Postgres struct {
 	DbPassword string `env:"DB_PASSWORD"`
 	DbName     string `env:"DB_NAME"`
 	DbSslMode  string `env:"DB_SSL_MODE"`
+}
+
+type JWT struct {
+	Secret          string        `env:"JWT_SECRET"`
+	AccessDuration  time.Duration `env:"JWT_ACCESS_DURATION"`
+	RefreshDuration time.Duration `env:"JWT_REFRESH_DURATION"`
 }
 
 func Parse() (*Config, error) {
