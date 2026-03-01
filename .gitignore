@@ -39,4 +39,7 @@ out/
 
 scrumio-final.drawio
 
+### Env ###
+.env
+
 .claude/

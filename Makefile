@@ -1,7 +1,7 @@
 COMPOSE_FILE = ./infrastructure/docker-compose.yaml
 
 run:
-	./gradlew bootRun
+	export $$(grep -v '^#' .env | xargs) && ./gradlew bootRun
 
 postgres-up:
 	docker compose -f $(COMPOSE_FILE) up -d postgres
