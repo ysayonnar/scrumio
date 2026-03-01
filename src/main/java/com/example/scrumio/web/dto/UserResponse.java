@@ -11,4 +11,5 @@ public record UserResponse(
         String email,
         UserRole role,
         OffsetDateTime createdAt
-) {}
+) {
+}

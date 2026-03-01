@@ -16,4 +16,5 @@ public record TicketResponse(
         UUID sprintId,
         UUID projectId,
         OffsetDateTime createdAt
-) {}
+) {
+}

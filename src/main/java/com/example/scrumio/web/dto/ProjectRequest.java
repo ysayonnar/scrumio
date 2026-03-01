@@ -9,4 +9,5 @@ public record ProjectRequest(
         @NotBlank String name,
         String description,
         @NotNull UUID ownerId
-) {}
+) {
+}

@@ -15,4 +15,5 @@ public record TicketRequest(
         Integer estimation,
         UUID sprintId,
         @NotNull UUID projectId
-) {}
+) {
+}

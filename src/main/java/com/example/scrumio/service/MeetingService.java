@@ -90,7 +90,9 @@ public class MeetingService {
     }
 
     private Sprint resolveSprint(UUID sprintId) {
-        if (sprintId == null) return null;
+        if (sprintId == null) {
+            return null;
+        }
         return sprintRepository.findActiveById(sprintId)
                 .orElseThrow(() -> new SprintNotFoundException(sprintId));
     }

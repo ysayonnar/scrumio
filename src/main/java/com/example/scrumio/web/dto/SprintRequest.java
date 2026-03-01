@@ -17,4 +17,5 @@ public record SprintRequest(
         @NotNull SprintStatus status,
         @NotNull SprintEstimationType estimationType,
         @NotNull UUID projectId
-) {}
+) {
+}

@@ -15,4 +15,5 @@ public record MeetingResponse(
         UUID sprintId,
         UUID projectId,
         OffsetDateTime createdAt
-) {}
+) {
+}

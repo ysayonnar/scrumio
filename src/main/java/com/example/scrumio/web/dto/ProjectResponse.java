@@ -9,4 +9,5 @@ public record ProjectResponse(
         String description,
         UUID ownerId,
         OffsetDateTime createdAt
-) {}
+) {
+}

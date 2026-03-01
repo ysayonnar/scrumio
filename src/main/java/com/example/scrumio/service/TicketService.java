@@ -44,8 +44,10 @@ public class TicketService {
     public List<TicketResponse> getAll(String statusStr, String priorityStr) {
         TicketStatus status = statusStr != null
                 ? TicketStatus.valueOf(statusStr.toUpperCase()) : null;
+
         TicketPriority priority = priorityStr != null
                 ? TicketPriority.valueOf(priorityStr.toUpperCase()) : null;
+
         return ticketRepository.findAllActive(status, priority).stream()
                 .map(mapper::toResponse).toList();
     }
@@ -58,7 +60,9 @@ public class TicketService {
     public TicketResponse create(TicketRequest request) {
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
+
         Sprint sprint = resolveSprint(request.sprintId());
+
         Ticket ticket = new Ticket();
         ticket.setTitle(request.title());
         ticket.setDescription(request.description());
@@ -67,6 +71,7 @@ public class TicketService {
         ticket.setEstimation(request.estimation());
         ticket.setSprint(sprint);
         ticket.setProject(project);
+
         return mapper.toResponse(ticketRepository.save(ticket));
     }
 
@@ -74,6 +79,7 @@ public class TicketService {
         Ticket ticket = findActive(id);
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
+
         Sprint sprint = resolveSprint(request.sprintId());
         ticket.setTitle(request.title());
         ticket.setDescription(request.description());
@@ -82,12 +88,14 @@ public class TicketService {
         ticket.setEstimation(request.estimation());
         ticket.setSprint(sprint);
         ticket.setProject(project);
+
         return mapper.toResponse(ticketRepository.save(ticket));
     }
 
     public TicketResponse delete(UUID id) {
         Ticket ticket = findActive(id);
         ticket.setDeletedAt(OffsetDateTime.now());
+
         return mapper.toResponse(ticketRepository.save(ticket));
     }
 
@@ -97,7 +105,9 @@ public class TicketService {
     }
 
     private Sprint resolveSprint(UUID sprintId) {
-        if (sprintId == null) return null;
+        if (sprintId == null) {
+            return null;
+        }
         return sprintRepository.findActiveById(sprintId)
                 .orElseThrow(() -> new SprintNotFoundException(sprintId));
     }

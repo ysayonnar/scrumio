@@ -18,4 +18,5 @@ public record SprintResponse(
         SprintEstimationType estimationType,
         UUID projectId,
         OffsetDateTime createdAt
-) {}
+) {
+}

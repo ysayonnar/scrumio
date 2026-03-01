@@ -10,4 +10,5 @@ public record UserRequest(
         @NotBlank @Email String email,
         @NotBlank String password,
         @NotNull UserRole role
-) {}
+) {
+}
