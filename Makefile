@@ -9,6 +9,12 @@ postgres-up:
 postgres-down:
 	docker compose -f $(COMPOSE_FILE) down postgres
 
+up:
+	docker compose -f $(COMPOSE_FILE) up
+
+down:
+	docker compose -f $(COMPOSE_FILE) down
+
 todos:
 	grep -r "TODO:"
 
