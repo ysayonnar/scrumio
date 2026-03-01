@@ -18,14 +18,18 @@ type AuthRouter struct {
 }
 
 func NewAuthRouter(cfg *config.Config, log *slog.Logger, db *sqlx.DB) *AuthRouter {
-	return &AuthRouter{log: log, db: db, cfg: cfg}
+	return &AuthRouter{
+		log: log,
+		db:  db,
+		cfg: cfg,
+	}
 }
 
 func (r AuthRouter) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {})
-	//mux.HandleFunc("POST /carts", h.createCart)
-	//mux.HandleFunc("POST /carts/{cart_id}/items", h.addToCart)
-	//mux.HandleFunc("DELETE /carts/{cart_id}/items/{item_id}", h.removeFromCart)
-	//mux.HandleFunc("GET /carts/{cart_id}", h.viewCart)
-	//mux.HandleFunc("GET /carts/{cart_id}/price", h.calculateCartPrice)
+
+	mux.HandleFunc("POST /registration", r.Registration)
+	//mux.HandleFunc("POST /login", r.Login)
+	//mux.HandleFunc("GET /auth", r.Authenticate)
+	//mux.HandleFunc("Get /logout", r.Logout)
 }
