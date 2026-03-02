@@ -51,12 +51,14 @@ func (r AuthRouter) Authenticate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		if blacklisted > 0 {
+			r.log.Debug("access token is in blacklist")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
 		accessClaims, err = jwt.ParseToken(accessTokenStr, r.cfg.JWT.Secret)
 		if err != nil && !errors.Is(err, jwtlib.ErrTokenExpired) {
+			r.log.Debug("access token is expired")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -71,6 +73,7 @@ func (r AuthRouter) Authenticate(w http.ResponseWriter, req *http.Request) {
 
 	refreshCookie, err := req.Cookie("refresh_token")
 	if err != nil {
+		r.log.Debug("no refresh_token cookie found")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -83,12 +86,14 @@ func (r AuthRouter) Authenticate(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if blacklisted > 0 {
+		r.log.Debug("refresh token is in blacklist")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	refreshClaims, err := jwt.ParseToken(refreshTokenStr, r.cfg.JWT.Secret)
 	if err != nil {
+		r.log.Debug("refresh token expired")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
