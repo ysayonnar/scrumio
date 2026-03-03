@@ -12,7 +12,7 @@ public final class AuthContext {
     public static final String USER_ID_ATTR = "auth.user_id";
     public static final String ROLE_ATTR = "auth.role";
 
-    private AuthContext() {}
+    private AuthContext() { }
 
     public static UUID getUserId() {
         return (UUID) getRequest().getAttribute(USER_ID_ATTR);

@@ -2,7 +2,6 @@ package com.example.scrumio.auth;
 
 import com.example.scrumio.web.exception.ServiceUnavailableException;
 import com.example.scrumio.web.exception.UnauthorizedException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -36,17 +35,17 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         try {
-            String cookieHeader = request.getCookies() == null ? "" :
-                    Arrays.stream(request.getCookies())
+            String cookieHeader = request.getCookies() == null ? ""
+                    : Arrays.stream(request.getCookies())
                             .map(c -> c.getName() + "=" + c.getValue())
                             .collect(Collectors.joining("; "));
             AuthValidationResponse auth = authClient.authenticate(cookieHeader);
             request.setAttribute(AuthContext.USER_ID_ATTR, auth.userId());
             request.setAttribute(AuthContext.ROLE_ATTR, auth.role());
             return true;
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException _) {
             throw new UnauthorizedException("Unauthorized");
-        } catch (Exception e) {
+        } catch (Exception _) {
             throw new ServiceUnavailableException("Authentication service is unavailable");
         }
     }
