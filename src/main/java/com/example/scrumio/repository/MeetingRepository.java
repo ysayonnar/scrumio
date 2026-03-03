@@ -13,9 +13,18 @@ import java.util.UUID;
 @Repository
 public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
 
-    @Query("SELECT m FROM Meeting m WHERE m.deletedAt IS NULL")
-    List<Meeting> findAllActive();
+    // N+1 FIX: JOIN FETCH loads project + sprint in the same query
+    @Query("SELECT m FROM Meeting m JOIN FETCH m.project LEFT JOIN FETCH m.sprint "
+            + "WHERE m.deletedAt IS NULL AND m.project.id = :projectId")
+    List<Meeting> findAllActiveByProjectId(@Param("projectId") UUID projectId);
 
-    @Query("SELECT m FROM Meeting m WHERE m.id = :id AND m.deletedAt IS NULL")
+    @Query("SELECT m FROM Meeting m JOIN FETCH m.project LEFT JOIN FETCH m.sprint "
+            + "WHERE m.id = :id AND m.deletedAt IS NULL")
     Optional<Meeting> findActiveById(@Param("id") UUID id);
+
+    @Query("SELECT m FROM Meeting m JOIN FETCH m.project LEFT JOIN FETCH m.sprint "
+            + "WHERE m.id = :id AND m.deletedAt IS NULL "
+            + "AND (m.project.owner.id = :userId OR EXISTS "
+            + "(SELECT pm FROM ProjectMember pm WHERE pm.project = m.project AND pm.user.id = :userId AND pm.deletedAt IS NULL))")
+    Optional<Meeting> findActiveByIdForUser(@Param("id") UUID id, @Param("userId") UUID userId);
 }

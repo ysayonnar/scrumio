@@ -1,12 +1,16 @@
 package com.example.scrumio.controller;
 
+import com.example.scrumio.auth.AuthContext;
+import com.example.scrumio.auth.RequireAuth;
 import com.example.scrumio.service.UserService;
+import com.example.scrumio.web.dto.UserPatchRequest;
 import com.example.scrumio.web.dto.UserRequest;
 import com.example.scrumio.web.dto.UserResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -28,11 +32,13 @@ public class UserController {
         this.service = service;
     }
 
+    @RequireAuth
     @GetMapping
     public List<UserResponse> getAll() {
         return service.getAll();
     }
 
+    @RequireAuth
     @GetMapping("/{id}")
     public UserResponse getById(@PathVariable UUID id) {
         return service.getById(id);
@@ -44,11 +50,19 @@ public class UserController {
         return service.create(request);
     }
 
+    @RequireAuth
     @PutMapping("/{id}")
     public UserResponse update(@PathVariable UUID id, @RequestBody @Valid UserRequest request) {
         return service.update(id, request);
     }
 
+    @RequireAuth
+    @PatchMapping("/{id}")
+    public UserResponse patch(@PathVariable UUID id, @RequestBody UserPatchRequest request) {
+        return service.patch(id, request);
+    }
+
+    @RequireAuth
     @DeleteMapping("/{id}")
     public UserResponse delete(@PathVariable UUID id) {
         return service.delete(id);

@@ -8,6 +8,7 @@ import com.example.scrumio.mapper.ProjectMapper;
 import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.UserRepository;
+import com.example.scrumio.web.dto.ProjectPatchRequest;
 import com.example.scrumio.web.dto.ProjectRequest;
 import com.example.scrumio.web.dto.ProjectResponse;
 import com.example.scrumio.web.exception.ProjectNotFoundException;
@@ -69,21 +70,26 @@ public class ProjectService {
         return mapper.toResponse(createdProject);
     }
 
-    public ProjectResponse update(UUID id, ProjectRequest request) {
-        Project project = findActive(id);
+    public ProjectResponse update(UUID id, ProjectRequest request, UUID userId) {
+        Project project = projectRepository.findActiveByIdForUser(id, userId)
+                .orElseThrow(() -> new ProjectNotFoundException(id));
         project.setName(request.name());
         project.setDescription(request.description());
         return mapper.toResponse(projectRepository.save(project));
     }
 
-    public ProjectResponse delete(UUID id) {
-        Project project = findActive(id);
-        project.setDeletedAt(OffsetDateTime.now());
+    public ProjectResponse patch(UUID id, ProjectPatchRequest request, UUID userId) {
+        Project project = projectRepository.findActiveByIdForUser(id, userId)
+                .orElseThrow(() -> new ProjectNotFoundException(id));
+        if (request.name() != null) project.setName(request.name());
+        if (request.description() != null) project.setDescription(request.description());
         return mapper.toResponse(projectRepository.save(project));
     }
 
-    private Project findActive(UUID id) {
-        return projectRepository.findActiveById(id)
+    public ProjectResponse delete(UUID id, UUID userId) {
+        Project project = projectRepository.findActiveByIdForUser(id, userId)
                 .orElseThrow(() -> new ProjectNotFoundException(id));
+        project.setDeletedAt(OffsetDateTime.now());
+        return mapper.toResponse(projectRepository.save(project));
     }
 }

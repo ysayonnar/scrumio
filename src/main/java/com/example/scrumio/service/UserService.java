@@ -3,6 +3,7 @@ package com.example.scrumio.service;
 import com.example.scrumio.entity.user.User;
 import com.example.scrumio.mapper.UserMapper;
 import com.example.scrumio.repository.UserRepository;
+import com.example.scrumio.web.dto.UserPatchRequest;
 import com.example.scrumio.web.dto.UserRequest;
 import com.example.scrumio.web.dto.UserResponse;
 import com.example.scrumio.web.exception.UserNotFoundException;
@@ -50,6 +51,14 @@ public class UserService {
         user.setEmail(request.email());
         user.setPasswordHash(request.password());
         user.setRole(request.role());
+        return mapper.toResponse(userRepository.save(user));
+    }
+
+    public UserResponse patch(UUID id, UserPatchRequest request) {
+        User user = findActive(id);
+        if (request.name() != null) user.setName(request.name());
+        if (request.email() != null) user.setEmail(request.email());
+        if (request.password() != null) user.setPasswordHash(request.password());
         return mapper.toResponse(userRepository.save(user));
     }
 
