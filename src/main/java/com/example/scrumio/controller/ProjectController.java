@@ -1,5 +1,7 @@
 package com.example.scrumio.controller;
 
+import com.example.scrumio.auth.AuthContext;
+import com.example.scrumio.auth.RequireAuth;
 import com.example.scrumio.service.ProjectService;
 import com.example.scrumio.web.dto.ProjectRequest;
 import com.example.scrumio.web.dto.ProjectResponse;
@@ -28,20 +30,23 @@ public class ProjectController {
         this.service = service;
     }
 
+    @RequireAuth
     @GetMapping
     public List<ProjectResponse> getAll() {
-        return service.getAll();
+        return service.getAll(AuthContext.getUserId());
     }
 
+    @RequireAuth
     @GetMapping("/{id}")
     public ProjectResponse getById(@PathVariable UUID id) {
-        return service.getById(id);
+        return service.getById(id, AuthContext.getUserId());
     }
 
+    @RequireAuth
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProjectResponse create(@RequestBody @Valid ProjectRequest request) {
-        return service.create(request);
+        return service.create(request, AuthContext.getUserId());
     }
 
     @PutMapping("/{id}")

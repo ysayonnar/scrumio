@@ -8,6 +8,8 @@ public record ProjectResponse(
         String name,
         String description,
         UUID ownerId,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt,
+        OffsetDateTime deletedAt
 ) {
 }
