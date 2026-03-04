@@ -158,7 +158,8 @@ public class MeetingService {
     }
 
     // WITHOUT @Transactional — each save is its own auto-committed transaction (demo).
-    // Members are validated first so no partial state is left on failure.
+    // No pre-validation: members are resolved and saved inline, so if an invalid memberId is
+    // encountered mid-loop, the meeting and any previously saved members are already committed.
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public MeetingResponse createWithMembersUnsafe(MeetingWithMembersRequest request, UUID userId) {
         verifyMembership(request.projectId(), userId);
@@ -168,7 +169,6 @@ public class MeetingService {
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
         Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
-        List<ProjectMember> resolvedMembers = resolveMembers(request.memberIds(), request.projectId());
         Meeting meeting = new Meeting();
         meeting.setTitle(request.title());
         meeting.setDescription(request.description());
@@ -178,7 +178,9 @@ public class MeetingService {
         meeting.setSprint(sprint);
         meeting.setProject(project);
         meetingRepository.save(meeting);
-        for (ProjectMember pm : resolvedMembers) {
+        for (UUID memberId : request.memberIds()) {
+            ProjectMember pm = projectMemberRepository.findActiveByIdAndProjectId(memberId, request.projectId())
+                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
             MeetingMember mm = new MeetingMember();
             mm.setMeeting(meeting);
             mm.setMember(pm);
