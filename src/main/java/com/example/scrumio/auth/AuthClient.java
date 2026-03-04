@@ -1,6 +1,7 @@
 package com.example.scrumio.auth;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -15,11 +16,11 @@ public class AuthClient {
                 .build();
     }
 
-    public AuthValidationResponse authenticate(String cookieHeader) {
+    public ResponseEntity<AuthValidationResponse> authenticate(String cookieHeader) {
         return restClient.get()
                 .uri("/auth")
                 .header("Cookie", cookieHeader)
                 .retrieve()
-                .body(AuthValidationResponse.class);
+                .toEntity(AuthValidationResponse.class);
     }
 }
