@@ -36,7 +36,7 @@ public class MeetingController {
 
     @RequireAuth
     @GetMapping
-    public List<MeetingResponse> getAll(@RequestParam UUID projectId) {
+    public List<MeetingResponse> getAll(@RequestParam("project_id") UUID projectId) {
         return service.getAll(projectId, AuthContext.getUserId());
     }
 

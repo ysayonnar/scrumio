@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,7 +71,7 @@ public class MeetingService {
         }
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
-        Sprint sprint = resolveSprint(request.sprintId());
+        Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
         Meeting meeting = new Meeting();
         meeting.setTitle(request.title());
         meeting.setDescription(request.description());
@@ -89,24 +90,34 @@ public class MeetingService {
         if (!request.startsAt().isBefore(request.endsAt())) {
             throw new IllegalArgumentException("startsAt must be before endsAt");
         }
-        Sprint sprint = resolveSprint(request.sprintId());
+        Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
+        meeting.setProject(project);
         meeting.setTitle(request.title());
         meeting.setDescription(request.description());
         meeting.setType(request.type());
         meeting.setStartsAt(request.startsAt());
         meeting.setEndsAt(request.endsAt());
         meeting.setSprint(sprint);
-        meeting.setProject(project);
         return mapper.toResponse(meetingRepository.save(meeting));
     }
 
     public MeetingResponse patch(UUID id, MeetingPatchRequest request, UUID userId) {
         Meeting meeting = findActiveForUser(id, userId);
-        if (request.title() != null) meeting.setTitle(request.title());
-        if (request.description() != null) meeting.setDescription(request.description());
-        if (request.type() != null) meeting.setType(request.type());
-        if (request.startsAt() != null) meeting.setStartsAt(request.startsAt());
-        if (request.endsAt() != null) meeting.setEndsAt(request.endsAt());
+        if (request.title() != null) {
+            meeting.setTitle(request.title());
+        }
+        if (request.description() != null) {
+            meeting.setDescription(request.description());
+        }
+        if (request.type() != null) {
+            meeting.setType(request.type());
+        }
+        if (request.startsAt() != null) {
+            meeting.setStartsAt(request.startsAt());
+        }
+        if (request.endsAt() != null) {
+            meeting.setEndsAt(request.endsAt());
+        }
         return mapper.toResponse(meetingRepository.save(meeting));
     }
 
@@ -125,7 +136,8 @@ public class MeetingService {
         }
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
-        Sprint sprint = resolveSprint(request.sprintId());
+        Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
+        List<ProjectMember> resolvedMembers = resolveMembers(request.memberIds(), request.projectId());
         Meeting meeting = new Meeting();
         meeting.setTitle(request.title());
         meeting.setDescription(request.description());
@@ -135,28 +147,28 @@ public class MeetingService {
         meeting.setSprint(sprint);
         meeting.setProject(project);
         meetingRepository.save(meeting);
-        for (UUID memberId : request.memberIds()) {
-            ProjectMember pm = projectMemberRepository.findActiveById(memberId)
-                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
+        for (ProjectMember pm : resolvedMembers) {
             MeetingMember mm = new MeetingMember();
             mm.setMeeting(meeting);
             mm.setMember(pm);
             meetingMemberRepository.save(mm);
+            meeting.getMembers().add(mm);
         }
         return mapper.toResponse(meeting);
     }
 
-    // WITHOUT @Transactional — partial save on error (demo):
-    // The meeting is saved in its own auto-committed transaction immediately.
-    // If a memberId lookup fails later, the meeting is ALREADY persisted — no rollback.
+    // WITHOUT @Transactional — each save is its own auto-committed transaction (demo).
+    // Members are validated first so no partial state is left on failure.
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public MeetingResponse createWithMembersUnsafe(MeetingWithMembersRequest request, UUID userId) {
+        verifyMembership(request.projectId(), userId);
         if (!request.startsAt().isBefore(request.endsAt())) {
             throw new IllegalArgumentException("startsAt must be before endsAt");
         }
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
-        Sprint sprint = resolveSprint(request.sprintId());
+        Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
+        List<ProjectMember> resolvedMembers = resolveMembers(request.memberIds(), request.projectId());
         Meeting meeting = new Meeting();
         meeting.setTitle(request.title());
         meeting.setDescription(request.description());
@@ -165,14 +177,13 @@ public class MeetingService {
         meeting.setEndsAt(request.endsAt());
         meeting.setSprint(sprint);
         meeting.setProject(project);
-        meetingRepository.save(meeting); // COMMITTED immediately — no outer transaction
-        for (UUID memberId : request.memberIds()) {
-            ProjectMember pm = projectMemberRepository.findActiveById(memberId)
-                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId)); // meeting already saved!
+        meetingRepository.save(meeting);
+        for (ProjectMember pm : resolvedMembers) {
             MeetingMember mm = new MeetingMember();
             mm.setMeeting(meeting);
             mm.setMember(pm);
             meetingMemberRepository.save(mm);
+            meeting.getMembers().add(mm);
         }
         return mapper.toResponse(meeting);
     }
@@ -187,11 +198,24 @@ public class MeetingService {
                 .orElseThrow(() -> new ProjectNotFoundException(projectId));
     }
 
-    private Sprint resolveSprint(UUID sprintId) {
+    private List<ProjectMember> resolveMembers(List<UUID> memberIds, UUID projectId) {
+        List<ProjectMember> result = new ArrayList<>();
+        for (UUID memberId : memberIds) {
+            result.add(projectMemberRepository.findActiveByIdAndProjectId(memberId, projectId)
+                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId)));
+        }
+        return result;
+    }
+
+    private Sprint resolveSprint(UUID sprintId, UUID projectId) {
         if (sprintId == null) {
             return null;
         }
-        return sprintRepository.findActiveById(sprintId)
+        Sprint sprint = sprintRepository.findActiveById(sprintId)
                 .orElseThrow(() -> new SprintNotFoundException(sprintId));
+        if (!sprint.getProject().getId().equals(projectId)) {
+            throw new IllegalArgumentException("Sprint does not belong to the specified project");
+        }
+        return sprint;
     }
 }

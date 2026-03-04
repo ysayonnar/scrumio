@@ -24,4 +24,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, UU
 
     @Query("SELECT pm FROM ProjectMember pm WHERE pm.id = :id AND pm.deletedAt IS NULL")
     Optional<ProjectMember> findActiveById(@Param("id") UUID id);
+
+    @Query("SELECT pm FROM ProjectMember pm WHERE pm.id = :id AND pm.project.id = :projectId AND pm.deletedAt IS NULL")
+    Optional<ProjectMember> findActiveByIdAndProjectId(@Param("id") UUID id, @Param("projectId") UUID projectId);
 }

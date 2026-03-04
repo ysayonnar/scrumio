@@ -92,11 +92,22 @@ public class TicketService {
 
     public TicketResponse patch(UUID id, TicketPatchRequest request, UUID userId) {
         Ticket ticket = findActiveForUser(id, userId);
-        if (request.title() != null) ticket.setTitle(request.title());
-        if (request.description() != null) ticket.setDescription(request.description());
-        if (request.priority() != null) ticket.setPriority(request.priority());
-        if (request.status() != null) ticket.setStatus(request.status());
-        if (request.estimation() != null) ticket.setEstimation(request.estimation());
+
+        if (request.title() != null) {
+            ticket.setTitle(request.title());
+        }
+        if (request.description() != null) {
+            ticket.setDescription(request.description());
+        }
+        if (request.priority() != null) {
+            ticket.setPriority(request.priority());
+        }
+        if (request.status() != null) {
+            ticket.setStatus(request.status());
+        }
+        if (request.estimation() != null) {
+            ticket.setEstimation(request.estimation());
+        }
         if (request.sprintId() != null) {
             Sprint sprint = resolveSprint(request.sprintId(), ticket.getProject().getId());
             ticket.setSprint(sprint);

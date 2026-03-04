@@ -35,7 +35,7 @@ public class SprintController {
 
     @RequireAuth
     @GetMapping
-    public List<SprintResponse> getAll(@RequestParam UUID projectId) {
+    public List<SprintResponse> getAll(@RequestParam("project_id") UUID projectId) {
         return service.getAll(projectId, AuthContext.getUserId());
     }
 

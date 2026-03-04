@@ -3,6 +3,7 @@ package com.example.scrumio.web.dto;
 import com.example.scrumio.entity.meeting.MeetingType;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record MeetingResponse(
@@ -14,6 +15,7 @@ public record MeetingResponse(
         OffsetDateTime endsAt,
         UUID sprintId,
         UUID projectId,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        List<MeetingMemberResponse> members
 ) {
 }

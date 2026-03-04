@@ -35,7 +35,7 @@ public class TicketController {
 
     @RequireAuth
     @GetMapping
-    public List<TicketResponse> getAll(@RequestParam UUID projectId,
+    public List<TicketResponse> getAll(@RequestParam("project_id") UUID projectId,
                                        @RequestParam(required = false) String status,
                                        @RequestParam(required = false) String priority) {
         return service.getAll(projectId, AuthContext.getUserId(), status, priority);

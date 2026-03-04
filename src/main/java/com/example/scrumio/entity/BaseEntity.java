@@ -24,6 +24,9 @@ public abstract class BaseEntity {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -34,9 +37,6 @@ public abstract class BaseEntity {
     protected void onUpdate() {
         updatedAt = OffsetDateTime.now();
     }
-
-    @Column(name = "deleted_at")
-    private OffsetDateTime deletedAt;
 
     public UUID getId() {
         return id;

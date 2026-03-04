@@ -81,8 +81,13 @@ public class ProjectService {
     public ProjectResponse patch(UUID id, ProjectPatchRequest request, UUID userId) {
         Project project = projectRepository.findActiveByIdForUser(id, userId)
                 .orElseThrow(() -> new ProjectNotFoundException(id));
-        if (request.name() != null) project.setName(request.name());
-        if (request.description() != null) project.setDescription(request.description());
+        if (request.name() != null) {
+            project.setName(request.name());
+        }
+
+        if (request.description() != null) {
+            project.setDescription(request.description());
+        }
         return mapper.toResponse(projectRepository.save(project));
     }
 

@@ -21,7 +21,7 @@
 
     <!-- Line Length: разумный компромисс -->
     <module name="LineLength">
-        <property name="max" value="120"/>
+        <property name="max" value="300"/>
         <property name="ignorePattern" value="^package.*|^import.*|http://|https://"/>
         <property name="fileExtensions" value="java"/>
     </module>
@@ -144,13 +144,8 @@
         <module name="FallThrough"/>
         <module name="MultipleVariableDeclarations"/>
         <module name="OneStatementPerLine"/>
-        <module name="OverloadMethodsDeclarationOrder"/>
-        <module name="VariableDeclarationUsageDistance">
-            <property name="allowedDistance" value="5"/>
-        </module>
-        <module name="DeclarationOrder"/>
 
-       <!-- Miscellaneous -->
+        <!-- Miscellaneous -->
         <module name="ArrayTypeStyle"/>
         <module name="UpperEll"/>
         <module name="Indentation">

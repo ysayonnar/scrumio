@@ -1,6 +1,5 @@
 package com.example.scrumio.controller;
 
-import com.example.scrumio.auth.AuthContext;
 import com.example.scrumio.auth.RequireAuth;
 import com.example.scrumio.service.UserService;
 import com.example.scrumio.web.dto.UserPatchRequest;

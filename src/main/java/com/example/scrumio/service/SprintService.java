@@ -92,13 +92,27 @@ public class SprintService {
 
     public SprintResponse patch(UUID id, SprintPatchRequest request, UUID userId) {
         Sprint sprint = findActiveForUser(id, userId);
-        if (request.name() != null) sprint.setName(request.name());
-        if (request.businessGoal() != null) sprint.setBusinessGoal(request.businessGoal());
-        if (request.devPlan() != null) sprint.setDevPlan(request.devPlan());
-        if (request.startDate() != null) sprint.setStartDate(request.startDate());
-        if (request.endDate() != null) sprint.setEndDate(request.endDate());
-        if (request.status() != null) sprint.setStatus(request.status());
-        if (request.estimationType() != null) sprint.setEstimationType(request.estimationType());
+        if (request.name() != null) {
+            sprint.setName(request.name());
+        }
+        if (request.businessGoal() != null) {
+            sprint.setBusinessGoal(request.businessGoal());
+        }
+        if (request.devPlan() != null) {
+            sprint.setDevPlan(request.devPlan());
+        }
+        if (request.startDate() != null) {
+            sprint.setStartDate(request.startDate());
+        }
+        if (request.endDate() != null) {
+            sprint.setEndDate(request.endDate());
+        }
+        if (request.status() != null) {
+            sprint.setStatus(request.status());
+        }
+        if (request.estimationType() != null) {
+            sprint.setEstimationType(request.estimationType());
+        }
         return mapper.toResponse(sprintRepository.save(sprint));
     }
 

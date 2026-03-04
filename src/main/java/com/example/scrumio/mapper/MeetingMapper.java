@@ -1,6 +1,7 @@
 package com.example.scrumio.mapper;
 
 import com.example.scrumio.entity.meeting.Meeting;
+import com.example.scrumio.web.dto.MeetingMemberResponse;
 import com.example.scrumio.web.dto.MeetingResponse;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,16 @@ public class MeetingMapper {
                 meeting.getEndsAt(),
                 meeting.getSprint() != null ? meeting.getSprint().getId() : null,
                 meeting.getProject().getId(),
-                meeting.getCreatedAt()
+                meeting.getCreatedAt(),
+                meeting.getMembers().stream()
+                        .map(mm -> new MeetingMemberResponse(
+                                mm.getMember().getId(),
+                                mm.getMember().getUser().getId(),
+                                mm.getMember().getUser().getName(),
+                                mm.getMember().getUser().getEmail(),
+                                mm.getMember().getRole()
+                        ))
+                        .toList()
         );
     }
 }

@@ -56,9 +56,16 @@ public class UserService {
 
     public UserResponse patch(UUID id, UserPatchRequest request) {
         User user = findActive(id);
-        if (request.name() != null) user.setName(request.name());
-        if (request.email() != null) user.setEmail(request.email());
-        if (request.password() != null) user.setPasswordHash(request.password());
+
+        if (request.name() != null) {
+            user.setName(request.name());
+        }
+        if (request.email() != null) {
+            user.setEmail(request.email());
+        }
+        if (request.password() != null) {
+            user.setPasswordHash(request.password());
+        }
         return mapper.toResponse(userRepository.save(user));
     }
 
