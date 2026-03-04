@@ -17,5 +17,5 @@ public record MeetingWithMembersRequest(
         UUID sprintId,
         @NotNull UUID projectId,
         @NotNull List<UUID> memberIds
-) {
+) implements MeetingRequestData {
 }

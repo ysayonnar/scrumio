@@ -15,5 +15,5 @@ public record MeetingRequest(
         @NotNull OffsetDateTime endsAt,
         UUID sprintId,
         @NotNull UUID projectId
-) {
+) implements MeetingRequestData {
 }

@@ -13,6 +13,7 @@ import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.SprintRepository;
 import com.example.scrumio.web.dto.MeetingPatchRequest;
 import com.example.scrumio.web.dto.MeetingRequest;
+import com.example.scrumio.web.dto.MeetingRequestData;
 import com.example.scrumio.web.dto.MeetingResponse;
 import com.example.scrumio.web.dto.MeetingWithMembersRequest;
 import com.example.scrumio.web.exception.MeetingNotFoundException;
@@ -66,38 +67,22 @@ public class MeetingService {
 
     public MeetingResponse create(MeetingRequest request, UUID userId) {
         verifyMembership(request.projectId(), userId);
-        if (!request.startsAt().isBefore(request.endsAt())) {
-            throw new IllegalArgumentException("startsAt must be before endsAt");
-        }
+        validateTimes(request);
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
         Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
         Meeting meeting = new Meeting();
-        meeting.setTitle(request.title());
-        meeting.setDescription(request.description());
-        meeting.setType(request.type());
-        meeting.setStartsAt(request.startsAt());
-        meeting.setEndsAt(request.endsAt());
-        meeting.setSprint(sprint);
-        meeting.setProject(project);
+        applyFields(meeting, request, sprint, project);
         return mapper.toResponse(meetingRepository.save(meeting));
     }
 
     public MeetingResponse update(UUID id, MeetingRequest request, UUID userId) {
         Meeting meeting = findActiveForUser(id, userId);
+        validateTimes(request);
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
-        if (!request.startsAt().isBefore(request.endsAt())) {
-            throw new IllegalArgumentException("startsAt must be before endsAt");
-        }
         Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
-        meeting.setProject(project);
-        meeting.setTitle(request.title());
-        meeting.setDescription(request.description());
-        meeting.setType(request.type());
-        meeting.setStartsAt(request.startsAt());
-        meeting.setEndsAt(request.endsAt());
-        meeting.setSprint(sprint);
+        applyFields(meeting, request, sprint, project);
         return mapper.toResponse(meetingRepository.save(meeting));
     }
 
@@ -130,29 +115,9 @@ public class MeetingService {
     // WITH @Transactional (class-level) — full rollback on error:
     // If ANY memberId is invalid, the entire transaction rolls back — no meeting is saved.
     public MeetingResponse createWithMembers(MeetingWithMembersRequest request, UUID userId) {
-        verifyMembership(request.projectId(), userId);
-        if (!request.startsAt().isBefore(request.endsAt())) {
-            throw new IllegalArgumentException("startsAt must be before endsAt");
-        }
-        Project project = projectRepository.findActiveById(request.projectId())
-                .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
-        Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
-        List<ProjectMember> resolvedMembers = resolveMembers(request.memberIds(), request.projectId());
-        Meeting meeting = new Meeting();
-        meeting.setTitle(request.title());
-        meeting.setDescription(request.description());
-        meeting.setType(request.type());
-        meeting.setStartsAt(request.startsAt());
-        meeting.setEndsAt(request.endsAt());
-        meeting.setSprint(sprint);
-        meeting.setProject(project);
-        meetingRepository.save(meeting);
-        for (ProjectMember pm : resolvedMembers) {
-            MeetingMember mm = new MeetingMember();
-            mm.setMeeting(meeting);
-            mm.setMember(pm);
-            meetingMemberRepository.save(mm);
-            meeting.getMembers().add(mm);
+        Meeting meeting = buildAndSaveMeeting(request, userId);
+        for (ProjectMember pm : resolveMembers(request.memberIds(), request.projectId())) {
+            addMemberToMeeting(meeting, pm);
         }
         return mapper.toResponse(meeting);
     }
@@ -162,14 +127,34 @@ public class MeetingService {
     // encountered mid-loop, the meeting and any previously saved members are already committed.
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public MeetingResponse createWithMembersUnsafe(MeetingWithMembersRequest request, UUID userId) {
-        verifyMembership(request.projectId(), userId);
-        if (!request.startsAt().isBefore(request.endsAt())) {
-            throw new IllegalArgumentException("startsAt must be before endsAt");
+        Meeting meeting = buildAndSaveMeeting(request, userId);
+        for (UUID memberId : request.memberIds()) {
+            ProjectMember pm = projectMemberRepository.findActiveByIdAndProjectId(memberId, request.projectId())
+                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
+            addMemberToMeeting(meeting, pm);
         }
+        return mapper.toResponse(meeting);
+    }
+
+    private Meeting buildAndSaveMeeting(MeetingWithMembersRequest request, UUID userId) {
+        verifyMembership(request.projectId(), userId);
+        validateTimes(request);
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
         Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
         Meeting meeting = new Meeting();
+        applyFields(meeting, request, sprint, project);
+        meetingRepository.save(meeting);
+        return meeting;
+    }
+
+    private void validateTimes(MeetingRequestData request) {
+        if (!request.startsAt().isBefore(request.endsAt())) {
+            throw new IllegalArgumentException("startsAt must be before endsAt");
+        }
+    }
+
+    private void applyFields(Meeting meeting, MeetingRequestData request, Sprint sprint, Project project) {
         meeting.setTitle(request.title());
         meeting.setDescription(request.description());
         meeting.setType(request.type());
@@ -177,17 +162,14 @@ public class MeetingService {
         meeting.setEndsAt(request.endsAt());
         meeting.setSprint(sprint);
         meeting.setProject(project);
-        meetingRepository.save(meeting);
-        for (UUID memberId : request.memberIds()) {
-            ProjectMember pm = projectMemberRepository.findActiveByIdAndProjectId(memberId, request.projectId())
-                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
-            MeetingMember mm = new MeetingMember();
-            mm.setMeeting(meeting);
-            mm.setMember(pm);
-            meetingMemberRepository.save(mm);
-            meeting.getMembers().add(mm);
-        }
-        return mapper.toResponse(meeting);
+    }
+
+    private void addMemberToMeeting(Meeting meeting, ProjectMember pm) {
+        MeetingMember mm = new MeetingMember();
+        mm.setMeeting(meeting);
+        mm.setMember(pm);
+        meetingMemberRepository.save(mm);
+        meeting.getMembers().add(mm);
     }
 
     private Meeting findActiveForUser(UUID id, UUID userId) {
