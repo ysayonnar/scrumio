@@ -3,9 +3,11 @@ package com.example.scrumio.service;
 import com.example.scrumio.entity.project.Project;
 import com.example.scrumio.entity.sprint.Sprint;
 import com.example.scrumio.mapper.SprintMapper;
+import com.example.scrumio.repository.MeetingRepository;
 import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.SprintRepository;
+import com.example.scrumio.repository.TicketRepository;
 import com.example.scrumio.web.dto.SprintPatchRequest;
 import com.example.scrumio.web.dto.SprintRequest;
 import com.example.scrumio.web.dto.SprintResponse;
@@ -19,29 +21,29 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class SprintService {
 
     private final SprintRepository sprintRepository;
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final TicketRepository ticketRepository;
+    private final MeetingRepository meetingRepository;
     private final SprintMapper mapper;
 
     public SprintService(SprintRepository sprintRepository,
                          ProjectRepository projectRepository,
                          ProjectMemberRepository projectMemberRepository,
+                         TicketRepository ticketRepository,
+                         MeetingRepository meetingRepository,
                          SprintMapper mapper) {
         this.sprintRepository = sprintRepository;
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
+        this.ticketRepository = ticketRepository;
+        this.meetingRepository = meetingRepository;
         this.mapper = mapper;
     }
 
-    // N+1 PROBLEM (bad — removed):
-    // sprintRepository.findAllActive() returned List<Sprint> with no JOIN FETCH.
-    // Then mapper called sprint.getProject().getId() → triggered a SELECT for EACH sprint = N+1 queries.
-    //
-    // FIX: findAllActiveByProjectId uses JOIN FETCH s.project → single query loads both Sprint + Project.
     @Transactional(readOnly = true)
     public List<SprintResponse> getAll(UUID projectId, UUID userId) {
         verifyMembership(projectId, userId);
@@ -116,8 +118,11 @@ public class SprintService {
         return mapper.toResponse(sprintRepository.save(sprint));
     }
 
+    @Transactional
     public SprintResponse delete(UUID id, UUID userId) {
         Sprint sprint = findActiveForUser(id, userId);
+        ticketRepository.unlinkFromSprint(id);
+        meetingRepository.unlinkFromSprint(id);
         sprint.setDeletedAt(OffsetDateTime.now());
         return mapper.toResponse(sprintRepository.save(sprint));
     }

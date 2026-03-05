@@ -42,6 +42,18 @@ public class TicketController {
     }
 
     @RequireAuth
+    @GetMapping("/safe")
+    public List<TicketResponse> getAllSafe(@RequestParam("project_id") UUID projectId) {
+        return service.getAllSafe(projectId, AuthContext.getUserId());
+    }
+
+    @RequireAuth
+    @GetMapping("/unsafe")
+    public List<TicketResponse> getAllUnsafe(@RequestParam("project_id") UUID projectId) {
+        return service.getAllUnsafe(projectId, AuthContext.getUserId());
+    }
+
+    @RequireAuth
     @GetMapping("/{id}")
     public TicketResponse getByID(@PathVariable UUID id) {
         return service.getByID(id, AuthContext.getUserId());

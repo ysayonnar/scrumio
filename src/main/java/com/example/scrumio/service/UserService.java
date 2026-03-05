@@ -7,6 +7,7 @@ import com.example.scrumio.web.dto.UserPatchRequest;
 import com.example.scrumio.web.dto.UserRequest;
 import com.example.scrumio.web.dto.UserResponse;
 import com.example.scrumio.web.exception.UserNotFoundException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,14 +16,15 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ProjectService projectService;
     private final UserMapper mapper;
 
-    public UserService(UserRepository userRepository, UserMapper mapper) {
+    public UserService(UserRepository userRepository, @Lazy ProjectService projectService, UserMapper mapper) {
         this.userRepository = userRepository;
+        this.projectService = projectService;
         this.mapper = mapper;
     }
 
@@ -69,8 +71,10 @@ public class UserService {
         return mapper.toResponse(userRepository.save(user));
     }
 
+    @Transactional
     public UserResponse delete(UUID id) {
         User user = findActive(id);
+        projectService.cascadeDeleteAllByOwner(id);
         user.setDeletedAt(OffsetDateTime.now());
         return mapper.toResponse(userRepository.save(user));
     }

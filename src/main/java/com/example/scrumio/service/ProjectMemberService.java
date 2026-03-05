@@ -5,6 +5,8 @@ import com.example.scrumio.entity.project.ProjectMember;
 import com.example.scrumio.entity.project.ProjectMemberRole;
 import com.example.scrumio.entity.user.User;
 import com.example.scrumio.mapper.ProjectMemberMapper;
+import com.example.scrumio.repository.MeetingMemberRepository;
+import com.example.scrumio.repository.MemberTicketRepository;
 import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.UserRepository;
@@ -22,21 +24,26 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class ProjectMemberService {
 
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final MemberTicketRepository memberTicketRepository;
+    private final MeetingMemberRepository meetingMemberRepository;
     private final ProjectMemberMapper mapper;
 
     public ProjectMemberService(ProjectMemberRepository projectMemberRepository,
                                 ProjectRepository projectRepository,
                                 UserRepository userRepository,
+                                MemberTicketRepository memberTicketRepository,
+                                MeetingMemberRepository meetingMemberRepository,
                                 ProjectMemberMapper mapper) {
         this.projectMemberRepository = projectMemberRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.memberTicketRepository = memberTicketRepository;
+        this.meetingMemberRepository = meetingMemberRepository;
         this.mapper = mapper;
     }
 
@@ -81,6 +88,7 @@ public class ProjectMemberService {
         return mapper.toResponse(projectMemberRepository.save(target));
     }
 
+    @Transactional
     public ProjectMemberResponse removeMember(UUID projectId, UUID memberId, UUID userId) {
         ProjectMember requestingMember = projectMemberRepository.findActiveByProjectAndUser(projectId, userId)
                 .orElseThrow(() -> new ProjectNotFoundException(projectId));
@@ -93,7 +101,10 @@ public class ProjectMemberService {
         if (target.getRole() == ProjectMemberRole.OWNER) {
             throw new IllegalArgumentException("Cannot remove the project OWNER");
         }
-        target.setDeletedAt(OffsetDateTime.now());
+        OffsetDateTime now = OffsetDateTime.now();
+        memberTicketRepository.softDeleteAllActiveByMemberId(target.getId(), now);
+        meetingMemberRepository.softDeleteAllActiveByMemberId(target.getId(), now);
+        target.setDeletedAt(now);
         return mapper.toResponse(projectMemberRepository.save(target));
     }
 

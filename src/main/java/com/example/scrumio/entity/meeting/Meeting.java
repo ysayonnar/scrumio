@@ -48,8 +48,6 @@ public class Meeting extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    // Cascade PERSIST+MERGE: creating/updating a meeting with members saves all in one operation.
-    // NOT REMOVE — soft-delete only, we never cascade hard deletes.
     @OneToMany(mappedBy = "meeting", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private List<MeetingMember> members = new ArrayList<>();
 

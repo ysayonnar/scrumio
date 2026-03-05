@@ -16,6 +16,7 @@ public class TicketMapper {
                 ticket.getStatus(),
                 ticket.getEstimation(),
                 ticket.getSprint() != null ? ticket.getSprint().getId() : null,
+                ticket.getSprint() != null ? ticket.getSprint().getName() : null,
                 ticket.getProject().getId(),
                 ticket.getCreatedAt()
         );

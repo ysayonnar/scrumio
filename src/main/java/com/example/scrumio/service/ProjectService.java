@@ -5,8 +5,13 @@ import com.example.scrumio.entity.project.ProjectMember;
 import com.example.scrumio.entity.project.ProjectMemberRole;
 import com.example.scrumio.entity.user.User;
 import com.example.scrumio.mapper.ProjectMapper;
+import com.example.scrumio.repository.MeetingMemberRepository;
+import com.example.scrumio.repository.MeetingRepository;
+import com.example.scrumio.repository.MemberTicketRepository;
 import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
+import com.example.scrumio.repository.SprintRepository;
+import com.example.scrumio.repository.TicketRepository;
 import com.example.scrumio.repository.UserRepository;
 import com.example.scrumio.web.dto.ProjectPatchRequest;
 import com.example.scrumio.web.dto.ProjectRequest;
@@ -21,20 +26,34 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final SprintRepository sprintRepository;
+    private final TicketRepository ticketRepository;
+    private final MeetingRepository meetingRepository;
+    private final MemberTicketRepository memberTicketRepository;
+    private final MeetingMemberRepository meetingMemberRepository;
     private final UserRepository userRepository;
     private final ProjectMapper mapper;
 
     public ProjectService(ProjectRepository projectRepository,
                           ProjectMemberRepository projectMemberRepository,
+                          SprintRepository sprintRepository,
+                          TicketRepository ticketRepository,
+                          MeetingRepository meetingRepository,
+                          MemberTicketRepository memberTicketRepository,
+                          MeetingMemberRepository meetingMemberRepository,
                           UserRepository userRepository,
                           ProjectMapper mapper) {
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
+        this.sprintRepository = sprintRepository;
+        this.ticketRepository = ticketRepository;
+        this.meetingRepository = meetingRepository;
+        this.memberTicketRepository = memberTicketRepository;
+        this.meetingMemberRepository = meetingMemberRepository;
         this.userRepository = userRepository;
         this.mapper = mapper;
     }
@@ -52,6 +71,7 @@ public class ProjectService {
         );
     }
 
+    @Transactional
     public ProjectResponse create(ProjectRequest request, UUID userId) {
         User owner = userRepository.findActiveById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
@@ -91,10 +111,39 @@ public class ProjectService {
         return mapper.toResponse(projectRepository.save(project));
     }
 
+    @Transactional
     public ProjectResponse delete(UUID id, UUID userId) {
         Project project = projectRepository.findActiveByIdForUser(id, userId)
                 .orElseThrow(() -> new ProjectNotFoundException(id));
-        project.setDeletedAt(OffsetDateTime.now());
-        return mapper.toResponse(projectRepository.save(project));
+        cascadeDelete(project);
+        return mapper.toResponse(project);
+    }
+
+    @Transactional
+    public void cascadeDeleteAllByOwner(UUID ownerId) {
+        OffsetDateTime now = OffsetDateTime.now();
+        projectRepository.findAllActiveByOwnerId(ownerId).forEach(project -> {
+            UUID projectId = project.getId();
+            memberTicketRepository.softDeleteAllActiveByProjectId(projectId, now);
+            meetingMemberRepository.softDeleteAllActiveByProjectId(projectId, now);
+            ticketRepository.softDeleteAllActiveByProjectId(projectId, now);
+            meetingRepository.softDeleteAllActiveByProjectId(projectId, now);
+            sprintRepository.softDeleteAllActiveByProjectId(projectId, now);
+            projectMemberRepository.softDeleteAllActiveByProjectId(projectId, now);
+        });
+        projectRepository.softDeleteAllActiveByOwnerId(ownerId, now);
+    }
+
+    private void cascadeDelete(Project project) {
+        UUID id = project.getId();
+        OffsetDateTime now = OffsetDateTime.now();
+        memberTicketRepository.softDeleteAllActiveByProjectId(id, now);
+        meetingMemberRepository.softDeleteAllActiveByProjectId(id, now);
+        ticketRepository.softDeleteAllActiveByProjectId(id, now);
+        meetingRepository.softDeleteAllActiveByProjectId(id, now);
+        sprintRepository.softDeleteAllActiveByProjectId(id, now);
+        projectMemberRepository.softDeleteAllActiveByProjectId(id, now);
+        project.setDeletedAt(now);
+        projectRepository.save(project);
     }
 }

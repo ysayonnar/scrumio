@@ -55,10 +55,6 @@
             <property name="max" value="100"/>
             <property name="countEmpty" value="false"/>
         </module>
-        <module name="ParameterNumber">
-            <property name="max" value="7"/>
-            <property name="ignoreOverriddenMethods" value="true"/>
-        </module>
         <module name="AnonInnerLength">
             <property name="max" value="30"/>
         </module>

@@ -6,6 +6,7 @@ import com.example.scrumio.entity.ticket.Ticket;
 import com.example.scrumio.entity.ticket.TicketPriority;
 import com.example.scrumio.entity.ticket.TicketStatus;
 import com.example.scrumio.mapper.TicketMapper;
+import com.example.scrumio.repository.MemberTicketRepository;
 import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.SprintRepository;
@@ -24,24 +25,26 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final ProjectRepository projectRepository;
     private final SprintRepository sprintRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final MemberTicketRepository memberTicketRepository;
     private final TicketMapper mapper;
 
     public TicketService(TicketRepository ticketRepository,
                          ProjectRepository projectRepository,
                          SprintRepository sprintRepository,
                          ProjectMemberRepository projectMemberRepository,
+                         MemberTicketRepository memberTicketRepository,
                          TicketMapper mapper) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.sprintRepository = sprintRepository;
         this.projectMemberRepository = projectMemberRepository;
+        this.memberTicketRepository = memberTicketRepository;
         this.mapper = mapper;
     }
 
@@ -52,6 +55,18 @@ public class TicketService {
         TicketPriority priority = priorityStr != null ? TicketPriority.valueOf(priorityStr.toUpperCase()) : null;
         return ticketRepository.findAllActiveByProjectId(projectId, status, priority).stream()
                 .map(mapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketResponse> getAllSafe(UUID projectId, UUID userId) {
+        verifyMembership(projectId, userId);
+        return ticketRepository.findAllActiveByProjectIdSafe(projectId).stream().map(mapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketResponse> getAllUnsafe(UUID projectId, UUID userId) {
+        verifyMembership(projectId, userId);
+        return ticketRepository.findAllActiveByProjectIdUnsafe(projectId).stream().map(mapper::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -115,9 +130,12 @@ public class TicketService {
         return mapper.toResponse(ticketRepository.save(ticket));
     }
 
+    @Transactional
     public TicketResponse delete(UUID id, UUID userId) {
         Ticket ticket = findActiveForUser(id, userId);
-        ticket.setDeletedAt(OffsetDateTime.now());
+        OffsetDateTime now = OffsetDateTime.now();
+        memberTicketRepository.softDeleteAllActiveByTicketId(id, now);
+        ticket.setDeletedAt(now);
         return mapper.toResponse(ticketRepository.save(ticket));
     }
 

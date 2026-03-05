@@ -71,7 +71,6 @@ public class MeetingController {
         return service.delete(id, AuthContext.getUserId());
     }
 
-    // WITH @Transactional — full rollback if any memberId is invalid
     @RequireAuth
     @PostMapping("/with-members")
     @ResponseStatus(HttpStatus.CREATED)
@@ -79,7 +78,6 @@ public class MeetingController {
         return service.createWithMembers(request, AuthContext.getUserId());
     }
 
-    // WITHOUT @Transactional — partial save on error (demo: meeting is committed even if a member lookup fails)
     @RequireAuth
     @PostMapping("/with-members-unsafe")
     @ResponseStatus(HttpStatus.CREATED)

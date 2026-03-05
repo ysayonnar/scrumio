@@ -21,16 +21,13 @@ import com.example.scrumio.web.exception.ProjectMemberNotFoundException;
 import com.example.scrumio.web.exception.ProjectNotFoundException;
 import com.example.scrumio.web.exception.SprintNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class MeetingService {
 
     private final MeetingRepository meetingRepository;
@@ -106,26 +103,29 @@ public class MeetingService {
         return mapper.toResponse(meetingRepository.save(meeting));
     }
 
+    @Transactional
     public MeetingResponse delete(UUID id, UUID userId) {
         Meeting meeting = findActiveForUser(id, userId);
-        meeting.setDeletedAt(OffsetDateTime.now());
+        OffsetDateTime now = OffsetDateTime.now();
+        meetingMemberRepository.softDeleteAllActiveByMeetingId(id, now);
+        meeting.setDeletedAt(now);
         return mapper.toResponse(meetingRepository.save(meeting));
     }
 
-    // WITH @Transactional (class-level) — full rollback on error:
-    // If ANY memberId is invalid, the entire transaction rolls back — no meeting is saved.
+    @Transactional
     public MeetingResponse createWithMembers(MeetingWithMembersRequest request, UUID userId) {
         Meeting meeting = buildAndSaveMeeting(request, userId);
-        for (ProjectMember pm : resolveMembers(request.memberIds(), request.projectId())) {
+        List<ProjectMember> members = projectMemberRepository
+                .findAllActiveByIdsAndProjectId(request.memberIds(), request.projectId());
+        if (members.size() != request.memberIds().size()) {
+            throw new ProjectMemberNotFoundException(null);
+        }
+        for (ProjectMember pm : members) {
             addMemberToMeeting(meeting, pm);
         }
         return mapper.toResponse(meeting);
     }
 
-    // WITHOUT @Transactional — each save is its own auto-committed transaction (demo).
-    // No pre-validation: members are resolved and saved inline, so if an invalid memberId is
-    // encountered mid-loop, the meeting and any previously saved members are already committed.
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public MeetingResponse createWithMembersUnsafe(MeetingWithMembersRequest request, UUID userId) {
         Meeting meeting = buildAndSaveMeeting(request, userId);
         for (UUID memberId : request.memberIds()) {
@@ -180,15 +180,6 @@ public class MeetingService {
     private void verifyMembership(UUID projectId, UUID userId) {
         projectMemberRepository.findActiveByProjectAndUser(projectId, userId)
                 .orElseThrow(() -> new ProjectNotFoundException(projectId));
-    }
-
-    private List<ProjectMember> resolveMembers(List<UUID> memberIds, UUID projectId) {
-        List<ProjectMember> result = new ArrayList<>();
-        for (UUID memberId : memberIds) {
-            result.add(projectMemberRepository.findActiveByIdAndProjectId(memberId, projectId)
-                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId)));
-        }
-        return result;
     }
 
     private Sprint resolveSprint(UUID sprintId, UUID projectId) {

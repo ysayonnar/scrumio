@@ -14,6 +14,7 @@ public record TicketResponse(
         TicketStatus status,
         Integer estimation,
         UUID sprintId,
+        String sprintName,
         UUID projectId,
         OffsetDateTime createdAt
 ) {

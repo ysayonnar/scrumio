@@ -5,14 +5,22 @@ spring:
     password: ${DB_PASSWORD}
 
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
 
   jackson:
     property-naming-strategy: SNAKE_CASE
 
   application:
     name: scrumio
+
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: TRACE
 
 auth-service:
   url: ${AUTH_SERVICE_URL}
