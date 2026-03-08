@@ -120,24 +120,16 @@ public class TicketService {
 
     public TicketResponse create(TicketRequest request, UUID userId) {
         verifyMembership(request.projectId(), userId);
-        Project project = projectRepository.findActiveById(request.projectId())
-                .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
-        Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
         Ticket ticket = new Ticket();
-        ticket.setTitle(request.title());
-        ticket.setDescription(request.description());
-        ticket.setPriority(request.priority());
-        ticket.setStatus(request.status());
-        ticket.setEstimation(request.estimation());
-        ticket.setSprint(sprint);
-        ticket.setProject(project);
-        TicketResponse response = mapper.toResponse(ticketRepository.save(ticket));
-        cacheIndex.invalidateByProjectId(request.projectId());
-        return response;
+        return saveFromRequest(ticket, request);
     }
 
     public TicketResponse update(UUID id, TicketRequest request, UUID userId) {
         Ticket ticket = findActiveForUser(id, userId);
+        return saveFromRequest(ticket, request);
+    }
+
+    private TicketResponse saveFromRequest(Ticket ticket, TicketRequest request) {
         Project project = projectRepository.findActiveById(request.projectId())
                 .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
         Sprint sprint = resolveSprint(request.sprintId(), request.projectId());
