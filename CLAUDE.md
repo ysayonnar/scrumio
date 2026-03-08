@@ -56,6 +56,10 @@ All tables have a `deleted_at` field for soft deletes.
 Local DB: `localhost:5432`, database `scrumio_db`, user/password `admin/admin` (see
 `infrastructure/docker-compose.yaml`).
 
+## Code Style
+
+Do not write comments (`//`, `/* */`, or Javadoc). Code must be self-documented through clear naming.
+
 ## Domain Model
 
 Core entities: **User**, **Project**, **Sprint**, **Ticket**, **Meeting**, **ProjectMember** (join table), plus
