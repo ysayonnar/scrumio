@@ -21,6 +21,9 @@ import com.example.scrumio.web.exception.TicketNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -50,23 +53,23 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public List<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr, String sprintStatusStr) {
+    public Page<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr, String sprintStatusStr, Pageable pageable) {
         verifyMembership(projectId, userId);
         TicketStatus status = statusStr != null ? TicketStatus.valueOf(statusStr.toUpperCase()) : null;
         TicketPriority priority = priorityStr != null ? TicketPriority.valueOf(priorityStr.toUpperCase()) : null;
         SprintStatus sprintStatus = sprintStatusStr != null ? SprintStatus.valueOf(sprintStatusStr.toUpperCase()) : null;
-        return ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus).stream()
-                .map(mapper::toResponse).toList();
+        return ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus, pageable)
+                .map(mapper::toResponse);
     }
 
     @Transactional(readOnly = true)
-    public List<TicketResponse> getAllNative(UUID projectId, UUID userId, String statusStr, String priorityStr, String sprintStatusStr) {
+    public Page<TicketResponse> getAllNative(UUID projectId, UUID userId, String statusStr, String priorityStr, String sprintStatusStr, Pageable pageable) {
         verifyMembership(projectId, userId);
         String status = statusStr != null ? statusStr.toUpperCase() : null;
         String priority = priorityStr != null ? priorityStr.toUpperCase() : null;
         String sprintStatus = sprintStatusStr != null ? sprintStatusStr.toUpperCase() : null;
-        return ticketRepository.findAllActiveByProjectIdNative(projectId, status, priority, sprintStatus).stream()
-                .map(mapper::fromNativeProjection).toList();
+        return ticketRepository.findAllActiveByProjectIdNative(projectId, status, priority, sprintStatus, pageable)
+                .map(mapper::fromNativeProjection);
     }
 
     @Transactional(readOnly = true)

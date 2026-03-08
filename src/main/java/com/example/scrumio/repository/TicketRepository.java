@@ -11,6 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,10 +27,11 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             + "AND (CAST(:status AS String) IS NULL OR t.status = :status) "
             + "AND (CAST(:priority AS String) IS NULL OR t.priority = :priority) "
             + "AND (CAST(:sprintStatus AS String) IS NULL OR s.status = :sprintStatus)")
-    List<Ticket> findAllActiveByProjectId(@Param("projectId") UUID projectId,
+    Page<Ticket> findAllActiveByProjectId(@Param("projectId") UUID projectId,
                                           @Param("status") TicketStatus status,
                                           @Param("priority") TicketPriority priority,
-                                          @Param("sprintStatus") SprintStatus sprintStatus);
+                                          @Param("sprintStatus") SprintStatus sprintStatus,
+                                          Pageable pageable);
 
     @Query("SELECT t FROM Ticket t JOIN FETCH t.project LEFT JOIN FETCH t.sprint "
             + "WHERE t.deletedAt IS NULL AND t.project.id = :projectId")
@@ -58,11 +62,20 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             + "AND (:status IS NULL OR t.status = CAST(:status AS ticket_status)) "
             + "AND (:priority IS NULL OR t.priority = CAST(:priority AS ticket_priority)) "
             + "AND (:sprintStatus IS NULL OR s.status = CAST(:sprintStatus AS sprint_status))",
+            countQuery = "SELECT COUNT(t.id) "
+            + "FROM ticket t "
+            + "JOIN project p ON p.id = t.project_id "
+            + "LEFT JOIN sprint s ON s.id = t.sprint_id "
+            + "WHERE t.deleted_at IS NULL AND t.project_id = :projectId "
+            + "AND (:status IS NULL OR t.status = CAST(:status AS ticket_status)) "
+            + "AND (:priority IS NULL OR t.priority = CAST(:priority AS ticket_priority)) "
+            + "AND (:sprintStatus IS NULL OR s.status = CAST(:sprintStatus AS sprint_status))",
             nativeQuery = true)
-    List<TicketNativeProjection> findAllActiveByProjectIdNative(@Param("projectId") UUID projectId,
+    Page<TicketNativeProjection> findAllActiveByProjectIdNative(@Param("projectId") UUID projectId,
                                                                 @Param("status") String status,
                                                                 @Param("priority") String priority,
-                                                                @Param("sprintStatus") String sprintStatus);
+                                                                @Param("sprintStatus") String sprintStatus,
+                                                                Pageable pageable);
 
     @Modifying
     @Query("UPDATE Ticket t SET t.deletedAt = :now WHERE t.project.id = :projectId AND t.deletedAt IS NULL")
