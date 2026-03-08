@@ -1,7 +1,10 @@
 package com.example.scrumio.service;
 
+import com.example.scrumio.cache.TicketCacheIndex;
+import com.example.scrumio.cache.TicketCacheKey;
 import com.example.scrumio.entity.project.Project;
 import com.example.scrumio.entity.sprint.Sprint;
+import com.example.scrumio.entity.sprint.SprintStatus;
 import com.example.scrumio.entity.ticket.Ticket;
 import com.example.scrumio.entity.ticket.TicketPriority;
 import com.example.scrumio.entity.ticket.TicketStatus;
@@ -17,15 +20,22 @@ import com.example.scrumio.web.dto.TicketResponse;
 import com.example.scrumio.web.exception.ProjectNotFoundException;
 import com.example.scrumio.web.exception.SprintNotFoundException;
 import com.example.scrumio.web.exception.TicketNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class TicketService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TicketService.class);
 
     private final TicketRepository ticketRepository;
     private final ProjectRepository projectRepository;
@@ -33,28 +43,62 @@ public class TicketService {
     private final ProjectMemberRepository projectMemberRepository;
     private final MemberTicketRepository memberTicketRepository;
     private final TicketMapper mapper;
+    private final TicketCacheIndex cacheIndex;
 
     public TicketService(TicketRepository ticketRepository,
                          ProjectRepository projectRepository,
                          SprintRepository sprintRepository,
                          ProjectMemberRepository projectMemberRepository,
                          MemberTicketRepository memberTicketRepository,
-                         TicketMapper mapper) {
+                         TicketMapper mapper,
+                         TicketCacheIndex cacheIndex) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.sprintRepository = sprintRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.memberTicketRepository = memberTicketRepository;
         this.mapper = mapper;
+        this.cacheIndex = cacheIndex;
     }
 
     @Transactional(readOnly = true)
-    public List<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr) {
+    public Page<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr,
+                                       String sprintStatusStr, Pageable pageable) {
         verifyMembership(projectId, userId);
+        TicketCacheKey cacheKey = new TicketCacheKey(
+                projectId,
+                statusStr != null ? statusStr.toUpperCase() : null,
+                priorityStr != null ? priorityStr.toUpperCase() : null,
+                sprintStatusStr != null ? sprintStatusStr.toUpperCase() : null,
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
+        Optional<Page<TicketResponse>> cached = cacheIndex.get(cacheKey);
+        if (cached.isPresent()) {
+            LOG.info("[CACHE HIT]  {}", cacheKey);
+            return cached.get();
+        }
+        LOG.info("[CACHE MISS] {}", cacheKey);
         TicketStatus status = statusStr != null ? TicketStatus.valueOf(statusStr.toUpperCase()) : null;
         TicketPriority priority = priorityStr != null ? TicketPriority.valueOf(priorityStr.toUpperCase()) : null;
-        return ticketRepository.findAllActiveByProjectId(projectId, status, priority).stream()
-                .map(mapper::toResponse).toList();
+        SprintStatus sprintStatus =
+                sprintStatusStr != null ? SprintStatus.valueOf(sprintStatusStr.toUpperCase()) : null;
+        Page<TicketResponse> result =
+                ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus, pageable)
+                        .map(mapper::toResponse);
+        cacheIndex.put(cacheKey, result);
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TicketResponse> getAllNative(UUID projectId, UUID userId, String statusStr, String priorityStr,
+                                             String sprintStatusStr, Pageable pageable) {
+        verifyMembership(projectId, userId);
+        String status = statusStr != null ? statusStr.toUpperCase() : null;
+        String priority = priorityStr != null ? priorityStr.toUpperCase() : null;
+        String sprintStatus = sprintStatusStr != null ? sprintStatusStr.toUpperCase() : null;
+        return ticketRepository.findAllActiveByProjectIdNative(projectId, status, priority, sprintStatus, pageable)
+                .map(mapper::fromNativeProjection);
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +131,9 @@ public class TicketService {
         ticket.setEstimation(request.estimation());
         ticket.setSprint(sprint);
         ticket.setProject(project);
-        return mapper.toResponse(ticketRepository.save(ticket));
+        TicketResponse response = mapper.toResponse(ticketRepository.save(ticket));
+        cacheIndex.invalidateByProjectId(request.projectId());
+        return response;
     }
 
     public TicketResponse update(UUID id, TicketRequest request, UUID userId) {
@@ -102,7 +148,9 @@ public class TicketService {
         ticket.setEstimation(request.estimation());
         ticket.setSprint(sprint);
         ticket.setProject(project);
-        return mapper.toResponse(ticketRepository.save(ticket));
+        TicketResponse response = mapper.toResponse(ticketRepository.save(ticket));
+        cacheIndex.invalidateByProjectId(request.projectId());
+        return response;
     }
 
     public TicketResponse patch(UUID id, TicketPatchRequest request, UUID userId) {
@@ -127,16 +175,22 @@ public class TicketService {
             Sprint sprint = resolveSprint(request.sprintId(), ticket.getProject().getId());
             ticket.setSprint(sprint);
         }
-        return mapper.toResponse(ticketRepository.save(ticket));
+        UUID projectId = ticket.getProject().getId();
+        TicketResponse response = mapper.toResponse(ticketRepository.save(ticket));
+        cacheIndex.invalidateByProjectId(projectId);
+        return response;
     }
 
     @Transactional
     public TicketResponse delete(UUID id, UUID userId) {
         Ticket ticket = findActiveForUser(id, userId);
+        UUID projectId = ticket.getProject().getId();
         OffsetDateTime now = OffsetDateTime.now();
         memberTicketRepository.softDeleteAllActiveByTicketId(id, now);
         ticket.setDeletedAt(now);
-        return mapper.toResponse(ticketRepository.save(ticket));
+        TicketResponse response = mapper.toResponse(ticketRepository.save(ticket));
+        cacheIndex.invalidateByProjectId(projectId);
+        return response;
     }
 
     private Ticket findActiveForUser(UUID id, UUID userId) {

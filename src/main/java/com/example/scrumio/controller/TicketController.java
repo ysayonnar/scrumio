@@ -7,6 +7,8 @@ import com.example.scrumio.web.dto.TicketPatchRequest;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,10 +37,24 @@ public class TicketController {
 
     @RequireAuth
     @GetMapping
-    public List<TicketResponse> getAll(@RequestParam("project_id") UUID projectId,
+    public Page<TicketResponse> getAll(@RequestParam("project_id") UUID projectId,
                                        @RequestParam(required = false) String status,
-                                       @RequestParam(required = false) String priority) {
-        return service.getAll(projectId, AuthContext.getUserId(), status, priority);
+                                       @RequestParam(required = false) String priority,
+                                       @RequestParam(name = "sprint_status", required = false) String sprintStatus,
+                                       @RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size) {
+        return service.getAll(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));
+    }
+
+    @RequireAuth
+    @GetMapping("/native")
+    public Page<TicketResponse> getAllNative(@RequestParam("project_id") UUID projectId,
+                                             @RequestParam(required = false) String status,
+                                             @RequestParam(required = false) String priority,
+                                             @RequestParam(name = "sprint_status", required = false) String sprintStatus,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int size) {
+        return service.getAllNative(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));
     }
 
     @RequireAuth
