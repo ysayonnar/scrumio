@@ -2,6 +2,7 @@ package com.example.scrumio.service;
 
 import com.example.scrumio.entity.project.Project;
 import com.example.scrumio.entity.sprint.Sprint;
+import com.example.scrumio.entity.sprint.SprintStatus;
 import com.example.scrumio.entity.ticket.Ticket;
 import com.example.scrumio.entity.ticket.TicketPriority;
 import com.example.scrumio.entity.ticket.TicketStatus;
@@ -49,12 +50,23 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public List<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr) {
+    public List<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr, String sprintStatusStr) {
         verifyMembership(projectId, userId);
         TicketStatus status = statusStr != null ? TicketStatus.valueOf(statusStr.toUpperCase()) : null;
         TicketPriority priority = priorityStr != null ? TicketPriority.valueOf(priorityStr.toUpperCase()) : null;
-        return ticketRepository.findAllActiveByProjectId(projectId, status, priority).stream()
+        SprintStatus sprintStatus = sprintStatusStr != null ? SprintStatus.valueOf(sprintStatusStr.toUpperCase()) : null;
+        return ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus).stream()
                 .map(mapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketResponse> getAllNative(UUID projectId, UUID userId, String statusStr, String priorityStr, String sprintStatusStr) {
+        verifyMembership(projectId, userId);
+        String status = statusStr != null ? statusStr.toUpperCase() : null;
+        String priority = priorityStr != null ? priorityStr.toUpperCase() : null;
+        String sprintStatus = sprintStatusStr != null ? sprintStatusStr.toUpperCase() : null;
+        return ticketRepository.findAllActiveByProjectIdNative(projectId, status, priority, sprintStatus).stream()
+                .map(mapper::fromNativeProjection).toList();
     }
 
     @Transactional(readOnly = true)

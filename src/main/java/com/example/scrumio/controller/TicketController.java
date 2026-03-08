@@ -37,8 +37,18 @@ public class TicketController {
     @GetMapping
     public List<TicketResponse> getAll(@RequestParam("project_id") UUID projectId,
                                        @RequestParam(required = false) String status,
-                                       @RequestParam(required = false) String priority) {
-        return service.getAll(projectId, AuthContext.getUserId(), status, priority);
+                                       @RequestParam(required = false) String priority,
+                                       @RequestParam(name = "sprint_status", required = false) String sprintStatus) {
+        return service.getAll(projectId, AuthContext.getUserId(), status, priority, sprintStatus);
+    }
+
+    @RequireAuth
+    @GetMapping("/native")
+    public List<TicketResponse> getAllNative(@RequestParam("project_id") UUID projectId,
+                                             @RequestParam(required = false) String status,
+                                             @RequestParam(required = false) String priority,
+                                             @RequestParam(name = "sprint_status", required = false) String sprintStatus) {
+        return service.getAllNative(projectId, AuthContext.getUserId(), status, priority, sprintStatus);
     }
 
     @RequireAuth
