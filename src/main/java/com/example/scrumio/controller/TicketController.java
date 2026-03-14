@@ -6,6 +6,10 @@ import com.example.scrumio.service.TicketService;
 import com.example.scrumio.web.dto.TicketPatchRequest;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Tickets")
 @RestController
 @RequestMapping("/api/v1/tickets")
 public class TicketController {
@@ -35,6 +40,13 @@ public class TicketController {
         this.service = service;
     }
 
+    @Operation(summary = "Get paginated tickets for a project with optional filters")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "400", description = "Missing project_id parameter"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
     @RequireAuth
     @GetMapping
     public Page<TicketResponse> getAll(@RequestParam("project_id") UUID projectId,
@@ -46,6 +58,13 @@ public class TicketController {
         return service.getAll(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));
     }
 
+    @Operation(summary = "Get paginated tickets using native query")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "400", description = "Missing project_id parameter"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
     @RequireAuth
     @GetMapping("/native")
     public Page<TicketResponse> getAllNative(@RequestParam("project_id") UUID projectId,
@@ -57,24 +76,49 @@ public class TicketController {
         return service.getAllNative(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));
     }
 
+    @Operation(summary = "Get all tickets without N+1 (JOIN FETCH demo)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
     @RequireAuth
     @GetMapping("/safe")
     public List<TicketResponse> getAllSafe(@RequestParam("project_id") UUID projectId) {
         return service.getAllSafe(projectId, AuthContext.getUserId());
     }
 
+    @Operation(summary = "Get all tickets with N+1 queries (demo)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
     @RequireAuth
     @GetMapping("/unsafe")
     public List<TicketResponse> getAllUnsafe(@RequestParam("project_id") UUID projectId) {
         return service.getAllUnsafe(projectId, AuthContext.getUserId());
     }
 
+    @Operation(summary = "Get ticket by ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Ticket not found")
+    })
     @RequireAuth
     @GetMapping("/{id}")
     public TicketResponse getByID(@PathVariable UUID id) {
         return service.getByID(id, AuthContext.getUserId());
     }
 
+    @Operation(summary = "Create a new ticket")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Ticket created"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
     @RequireAuth
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -82,18 +126,37 @@ public class TicketController {
         return service.create(request, AuthContext.getUserId());
     }
 
+    @Operation(summary = "Replace a ticket")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Ticket not found")
+    })
     @RequireAuth
     @PutMapping("/{id}")
     public TicketResponse update(@PathVariable UUID id, @RequestBody @Valid TicketRequest request) {
         return service.update(id, request, AuthContext.getUserId());
     }
 
+    @Operation(summary = "Partially update a ticket")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Ticket not found")
+    })
     @RequireAuth
     @PatchMapping("/{id}")
     public TicketResponse patch(@PathVariable UUID id, @RequestBody TicketPatchRequest request) {
         return service.patch(id, request, AuthContext.getUserId());
     }
 
+    @Operation(summary = "Delete a ticket")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ticket deleted"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Ticket not found")
+    })
     @RequireAuth
     @DeleteMapping("/{id}")
     public TicketResponse delete(@PathVariable UUID id) {

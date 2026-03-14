@@ -1,12 +1,16 @@
 package com.example.scrumio.web.dto;
 
+import java.time.OffsetDateTime;
+
 public class ErrorResponse {
     private String code;
     private String message;
+    private OffsetDateTime timestamp;
 
     public ErrorResponse(String code, String message) {
         this.code = code;
         this.message = message;
+        this.timestamp = OffsetDateTime.now();
     }
 
     public String getCode() {
@@ -23,5 +27,13 @@ public class ErrorResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public OffsetDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(OffsetDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 }
