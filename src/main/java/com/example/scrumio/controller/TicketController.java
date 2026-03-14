@@ -2,6 +2,9 @@ package com.example.scrumio.controller;
 
 import com.example.scrumio.auth.AuthContext;
 import com.example.scrumio.auth.RequireAuth;
+import com.example.scrumio.entity.sprint.SprintStatus;
+import com.example.scrumio.entity.ticket.TicketPriority;
+import com.example.scrumio.entity.ticket.TicketStatus;
 import com.example.scrumio.service.TicketService;
 import com.example.scrumio.web.dto.TicketPatchRequest;
 import com.example.scrumio.web.dto.TicketRequest;
@@ -50,9 +53,9 @@ public class TicketController {
     @RequireAuth
     @GetMapping
     public Page<TicketResponse> getAll(@RequestParam("project_id") UUID projectId,
-                                       @RequestParam(required = false) String status,
-                                       @RequestParam(required = false) String priority,
-                                       @RequestParam(name = "sprint_status", required = false) String sprintStatus,
+                                       @RequestParam(required = false) TicketStatus status,
+                                       @RequestParam(required = false) TicketPriority priority,
+                                       @RequestParam(name = "sprint_status", required = false) SprintStatus sprintStatus,
                                        @RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "10") int size) {
         return service.getAll(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));
@@ -68,9 +71,9 @@ public class TicketController {
     @RequireAuth
     @GetMapping("/native")
     public Page<TicketResponse> getAllNative(@RequestParam("project_id") UUID projectId,
-                                             @RequestParam(required = false) String status,
-                                             @RequestParam(required = false) String priority,
-                                             @RequestParam(name = "sprint_status", required = false) String sprintStatus,
+                                             @RequestParam(required = false) TicketStatus status,
+                                             @RequestParam(required = false) TicketPriority priority,
+                                             @RequestParam(name = "sprint_status", required = false) SprintStatus sprintStatus,
                                              @RequestParam(defaultValue = "0") int page,
                                              @RequestParam(defaultValue = "10") int size) {
         return service.getAllNative(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));

@@ -62,27 +62,23 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TicketResponse> getAll(UUID projectId, UUID userId, String statusStr, String priorityStr,
-                                       String sprintStatusStr, Pageable pageable) {
+    public Page<TicketResponse> getAll(UUID projectId, UUID userId, TicketStatus status, TicketPriority priority,
+                                       SprintStatus sprintStatus, Pageable pageable) {
         verifyMembership(projectId, userId);
         TicketCacheKey cacheKey = new TicketCacheKey(
                 projectId,
-                statusStr != null ? statusStr.toUpperCase() : null,
-                priorityStr != null ? priorityStr.toUpperCase() : null,
-                sprintStatusStr != null ? sprintStatusStr.toUpperCase() : null,
+                status != null ? status.name() : null,
+                priority != null ? priority.name() : null,
+                sprintStatus != null ? sprintStatus.name() : null,
                 pageable.getPageNumber(),
                 pageable.getPageSize()
         );
         Optional<Page<TicketResponse>> cached = cacheIndex.get(cacheKey);
         if (cached.isPresent()) {
-            LOG.info("[CACHE HIT]  {}", cacheKey);
+            LOG.info("[CACHE HIT]  key={}", cacheKey.hashCode());
             return cached.get();
         }
-        LOG.info("[CACHE MISS] {}", cacheKey);
-        TicketStatus status = statusStr != null ? TicketStatus.valueOf(statusStr.toUpperCase()) : null;
-        TicketPriority priority = priorityStr != null ? TicketPriority.valueOf(priorityStr.toUpperCase()) : null;
-        SprintStatus sprintStatus =
-                sprintStatusStr != null ? SprintStatus.valueOf(sprintStatusStr.toUpperCase()) : null;
+        LOG.info("[CACHE MISS] key={}", cacheKey.hashCode());
         Page<TicketResponse> result =
                 ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus, pageable)
                         .map(mapper::toResponse);
@@ -91,13 +87,13 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TicketResponse> getAllNative(UUID projectId, UUID userId, String statusStr, String priorityStr,
-                                             String sprintStatusStr, Pageable pageable) {
+    public Page<TicketResponse> getAllNative(UUID projectId, UUID userId, TicketStatus status, TicketPriority priority,
+                                             SprintStatus sprintStatus, Pageable pageable) {
         verifyMembership(projectId, userId);
-        String status = statusStr != null ? statusStr.toUpperCase() : null;
-        String priority = priorityStr != null ? priorityStr.toUpperCase() : null;
-        String sprintStatus = sprintStatusStr != null ? sprintStatusStr.toUpperCase() : null;
-        return ticketRepository.findAllActiveByProjectIdNative(projectId, status, priority, sprintStatus, pageable)
+        String statusStr = status != null ? status.name() : null;
+        String priorityStr = priority != null ? priority.name() : null;
+        String sprintStatusStr = sprintStatus != null ? sprintStatus.name() : null;
+        return ticketRepository.findAllActiveByProjectIdNative(projectId, statusStr, priorityStr, sprintStatusStr, pageable)
                 .map(mapper::fromNativeProjection);
     }
 
