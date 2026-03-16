@@ -22,3 +22,6 @@ apply-migrations:
 	./gradlew flywayMigrate
 	./gradlew flywayInfo
 	./gradlew flywayValidate
+
+test:
+	./gradlew test

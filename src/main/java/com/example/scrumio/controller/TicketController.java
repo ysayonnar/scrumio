@@ -6,6 +6,7 @@ import com.example.scrumio.entity.sprint.SprintStatus;
 import com.example.scrumio.entity.ticket.TicketPriority;
 import com.example.scrumio.entity.ticket.TicketStatus;
 import com.example.scrumio.service.TicketService;
+import com.example.scrumio.web.dto.BulkTicketRequest;
 import com.example.scrumio.web.dto.TicketPatchRequest;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
@@ -152,6 +153,34 @@ public class TicketController {
     @PatchMapping("/{id}")
     public TicketResponse patch(@PathVariable UUID id, @RequestBody TicketPatchRequest request) {
         return service.patch(id, request, AuthContext.getUserId());
+    }
+
+    @Operation(summary = "Bulk create tickets with member assignments (transactional, batch load)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Tickets created"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project or member not found")
+    })
+    @RequireAuth
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<TicketResponse> createBulk(@RequestBody @Valid BulkTicketRequest request) {
+        return service.createBulk(request, AuthContext.getUserId());
+    }
+
+    @Operation(summary = "Bulk create tickets (N+1 demo, non-transactional)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Tickets created"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Project or member not found")
+    })
+    @RequireAuth
+    @PostMapping("/bulk-unsafe")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<TicketResponse> createBulkUnsafe(@RequestBody @Valid BulkTicketRequest request) {
+        return service.createBulkUnsafe(request, AuthContext.getUserId());
     }
 
     @Operation(summary = "Delete a ticket")
