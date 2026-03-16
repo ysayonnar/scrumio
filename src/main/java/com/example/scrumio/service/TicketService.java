@@ -221,12 +221,7 @@ public class TicketService {
         }
 
         return request.tickets().stream()
-                .map(item -> {
-                    Ticket ticket = buildTicket(item, project, sprint.orElse(null));
-                    ticketRepository.save(ticket);
-                    assignMembers(ticket, item.memberIds(), membersById);
-                    return mapper.toResponse(ticket);
-                })
+                .map(item -> createAndSaveTicket(item, project, sprint.orElse(null), membersById))
                 .toList();
     }
 
@@ -239,22 +234,7 @@ public class TicketService {
                 .map(sprintId -> resolveSprint(sprintId, request.projectId()));
 
         return request.tickets().stream()
-                .map(item -> {
-                    Ticket ticket = buildTicket(item, project, sprint.orElse(null));
-                    ticketRepository.save(ticket);
-                    List<UUID> memberIds = Optional.ofNullable(item.memberIds())
-                            .orElse(Collections.emptyList());
-                    for (UUID memberId : memberIds) {
-                        ProjectMember pm = projectMemberRepository
-                                .findActiveByIdAndProjectId(memberId, request.projectId())
-                                .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
-                        MemberTicket mt = new MemberTicket();
-                        mt.setTicket(ticket);
-                        mt.setMember(pm);
-                        memberTicketRepository.save(mt);
-                    }
-                    return mapper.toResponse(ticket);
-                })
+                .map(item -> createAndSaveTicketUnsafe(item, project, sprint.orElse(null), request.projectId()))
                 .toList();
     }
 
@@ -270,17 +250,39 @@ public class TicketService {
         return ticket;
     }
 
+    private TicketResponse createAndSaveTicket(BulkTicketItemRequest item, Project project, Sprint sprint, Map<UUID, ProjectMember> membersById) {
+        Ticket ticket = buildTicket(item, project, sprint);
+        ticketRepository.save(ticket);
+        assignMembers(ticket, item.memberIds(), membersById);
+        return mapper.toResponse(ticket);
+    }
+
+    private TicketResponse createAndSaveTicketUnsafe(BulkTicketItemRequest item, Project project, Sprint sprint, UUID projectId) {
+        Ticket ticket = buildTicket(item, project, sprint);
+        ticketRepository.save(ticket);
+        List<UUID> memberIds = Optional.ofNullable(item.memberIds()).orElse(Collections.emptyList());
+        for (UUID memberId : memberIds) {
+            ProjectMember pm = projectMemberRepository
+                    .findActiveByIdAndProjectId(memberId, projectId)
+                    .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
+            saveMemberTicket(ticket, pm);
+        }
+        return mapper.toResponse(ticket);
+    }
+
     private void assignMembers(Ticket ticket, List<UUID> memberIds, Map<UUID, ProjectMember> membersById) {
         Optional.ofNullable(memberIds)
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(membersById::get)
-                .forEach(pm -> {
-                    MemberTicket mt = new MemberTicket();
-                    mt.setTicket(ticket);
-                    mt.setMember(pm);
-                    memberTicketRepository.save(mt);
-                });
+                .forEach(pm -> saveMemberTicket(ticket, pm));
+    }
+
+    private void saveMemberTicket(Ticket ticket, ProjectMember pm) {
+        MemberTicket mt = new MemberTicket();
+        mt.setTicket(ticket);
+        mt.setMember(pm);
+        memberTicketRepository.save(mt);
     }
 
     private Ticket findActiveForUser(UUID id, UUID userId) {

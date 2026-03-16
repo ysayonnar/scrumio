@@ -122,28 +122,24 @@ public class ProjectService {
     @Transactional
     public void cascadeDeleteAllByOwner(UUID ownerId) {
         OffsetDateTime now = OffsetDateTime.now();
-        projectRepository.findAllActiveByOwnerId(ownerId).forEach(project -> {
-            UUID projectId = project.getId();
-            memberTicketRepository.softDeleteAllActiveByProjectId(projectId, now);
-            meetingMemberRepository.softDeleteAllActiveByProjectId(projectId, now);
-            ticketRepository.softDeleteAllActiveByProjectId(projectId, now);
-            meetingRepository.softDeleteAllActiveByProjectId(projectId, now);
-            sprintRepository.softDeleteAllActiveByProjectId(projectId, now);
-            projectMemberRepository.softDeleteAllActiveByProjectId(projectId, now);
-        });
+        projectRepository.findAllActiveByOwnerId(ownerId)
+                .forEach(project -> cascadeDeleteRelations(project.getId(), now));
         projectRepository.softDeleteAllActiveByOwnerId(ownerId, now);
     }
 
     private void cascadeDelete(Project project) {
-        UUID id = project.getId();
         OffsetDateTime now = OffsetDateTime.now();
-        memberTicketRepository.softDeleteAllActiveByProjectId(id, now);
-        meetingMemberRepository.softDeleteAllActiveByProjectId(id, now);
-        ticketRepository.softDeleteAllActiveByProjectId(id, now);
-        meetingRepository.softDeleteAllActiveByProjectId(id, now);
-        sprintRepository.softDeleteAllActiveByProjectId(id, now);
-        projectMemberRepository.softDeleteAllActiveByProjectId(id, now);
+        cascadeDeleteRelations(project.getId(), now);
         project.setDeletedAt(now);
         projectRepository.save(project);
+    }
+
+    private void cascadeDeleteRelations(UUID projectId, OffsetDateTime now) {
+        memberTicketRepository.softDeleteAllActiveByProjectId(projectId, now);
+        meetingMemberRepository.softDeleteAllActiveByProjectId(projectId, now);
+        ticketRepository.softDeleteAllActiveByProjectId(projectId, now);
+        meetingRepository.softDeleteAllActiveByProjectId(projectId, now);
+        sprintRepository.softDeleteAllActiveByProjectId(projectId, now);
+        projectMemberRepository.softDeleteAllActiveByProjectId(projectId, now);
     }
 }
