@@ -3,7 +3,9 @@ package com.example.scrumio.service;
 import com.example.scrumio.cache.TicketCacheIndex;
 import com.example.scrumio.cache.TicketCacheKey;
 import com.example.scrumio.entity.project.Project;
+import com.example.scrumio.entity.project.ProjectMember;
 import com.example.scrumio.entity.sprint.Sprint;
+import com.example.scrumio.entity.ticket.MemberTicket;
 import com.example.scrumio.entity.sprint.SprintStatus;
 import com.example.scrumio.entity.ticket.Ticket;
 import com.example.scrumio.entity.ticket.TicketPriority;
@@ -14,9 +16,12 @@ import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.SprintRepository;
 import com.example.scrumio.repository.TicketRepository;
+import com.example.scrumio.web.dto.BulkTicketItemRequest;
+import com.example.scrumio.web.dto.BulkTicketRequest;
 import com.example.scrumio.web.dto.TicketPatchRequest;
 import com.example.scrumio.web.dto.TicketRequest;
 import com.example.scrumio.web.dto.TicketResponse;
+import com.example.scrumio.web.exception.ProjectMemberNotFoundException;
 import com.example.scrumio.web.exception.ProjectNotFoundException;
 import com.example.scrumio.web.exception.SprintNotFoundException;
 import com.example.scrumio.web.exception.TicketNotFoundException;
@@ -25,12 +30,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketService {
@@ -179,6 +190,97 @@ public class TicketService {
         TicketResponse response = mapper.toResponse(ticketRepository.save(ticket));
         cacheIndex.invalidateByProjectId(projectId);
         return response;
+    }
+
+    @Transactional
+    public List<TicketResponse> createBulk(BulkTicketRequest request, UUID userId) {
+        verifyMembership(request.projectId(), userId);
+        Project project = projectRepository.findActiveById(request.projectId())
+                .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
+        Optional<Sprint> sprint = Optional.ofNullable(request.sprintId())
+                .map(sprintId -> resolveSprint(sprintId, request.projectId()));
+
+        Set<UUID> allMemberIds = request.tickets().stream()
+                .map(BulkTicketItemRequest::memberIds)
+                .filter(ids -> ids != null && !ids.isEmpty())
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+
+        Map<UUID, ProjectMember> membersById = allMemberIds.isEmpty()
+                ? Collections.emptyMap()
+                : projectMemberRepository.findAllActiveByIdsAndProjectId(
+                        allMemberIds.stream().toList(), request.projectId())
+                .stream()
+                .collect(Collectors.toMap(pm -> pm.getId(), Function.identity()));
+
+        if (membersById.size() != allMemberIds.size()) {
+            Set<UUID> missing = allMemberIds.stream()
+                    .filter(id -> !membersById.containsKey(id))
+                    .collect(Collectors.toSet());
+            throw new ProjectMemberNotFoundException(missing.iterator().next());
+        }
+
+        return request.tickets().stream()
+                .map(item -> {
+                    Ticket ticket = buildTicket(item, project, sprint.orElse(null));
+                    ticketRepository.save(ticket);
+                    assignMembers(ticket, item.memberIds(), membersById);
+                    return mapper.toResponse(ticket);
+                })
+                .toList();
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public List<TicketResponse> createBulkUnsafe(BulkTicketRequest request, UUID userId) {
+        verifyMembership(request.projectId(), userId);
+        Project project = projectRepository.findActiveById(request.projectId())
+                .orElseThrow(() -> new ProjectNotFoundException(request.projectId()));
+        Optional<Sprint> sprint = Optional.ofNullable(request.sprintId())
+                .map(sprintId -> resolveSprint(sprintId, request.projectId()));
+
+        return request.tickets().stream()
+                .map(item -> {
+                    Ticket ticket = buildTicket(item, project, sprint.orElse(null));
+                    ticketRepository.save(ticket);
+                    List<UUID> memberIds = Optional.ofNullable(item.memberIds())
+                            .orElse(Collections.emptyList());
+                    for (UUID memberId : memberIds) {
+                        ProjectMember pm = projectMemberRepository
+                                .findActiveByIdAndProjectId(memberId, request.projectId())
+                                .orElseThrow(() -> new ProjectMemberNotFoundException(memberId));
+                        MemberTicket mt = new MemberTicket();
+                        mt.setTicket(ticket);
+                        mt.setMember(pm);
+                        memberTicketRepository.save(mt);
+                    }
+                    return mapper.toResponse(ticket);
+                })
+                .toList();
+    }
+
+    private Ticket buildTicket(BulkTicketItemRequest item, Project project, Sprint sprint) {
+        Ticket ticket = new Ticket();
+        ticket.setTitle(item.title());
+        ticket.setDescription(item.description());
+        ticket.setPriority(item.priority());
+        ticket.setStatus(item.status());
+        ticket.setEstimation(item.estimation());
+        ticket.setSprint(sprint);
+        ticket.setProject(project);
+        return ticket;
+    }
+
+    private void assignMembers(Ticket ticket, List<UUID> memberIds, Map<UUID, ProjectMember> membersById) {
+        Optional.ofNullable(memberIds)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(membersById::get)
+                .forEach(pm -> {
+                    MemberTicket mt = new MemberTicket();
+                    mt.setTicket(ticket);
+                    mt.setMember(pm);
+                    memberTicketRepository.save(mt);
+                });
     }
 
     private Ticket findActiveForUser(UUID id, UUID userId) {
