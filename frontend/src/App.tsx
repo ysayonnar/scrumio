@@ -7,6 +7,7 @@ import { ProjectsPage } from './pages/ProjectsPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { SprintDetailPage } from './pages/SprintDetailPage'
 import { TicketDetailPage } from './pages/TicketDetailPage'
+import { BoardPage } from './pages/BoardPage'
 import { type ReactNode } from 'react'
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ function AppRoutes() {
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
       <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
+      <Route path="/projects/:id/board" element={<ProtectedRoute><BoardPage /></ProtectedRoute>} />
       <Route path="/projects/:id/sprints/:sprintId" element={<ProtectedRoute><SprintDetailPage /></ProtectedRoute>} />
       <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/projects" replace />} />
