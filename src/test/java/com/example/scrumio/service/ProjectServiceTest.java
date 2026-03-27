@@ -189,6 +189,29 @@ class ProjectServiceTest {
             assertEquals("Patched", captor.getValue().getName());
             assertEquals("Original desc", captor.getValue().getDescription());
         }
+
+        @Test
+        void shouldPatchDescriptionOnly() {
+            project.setName("Original");
+            project.setDescription("Original desc");
+            when(projectRepository.findActiveByIdForUser(projectId, userId)).thenReturn(Optional.of(project));
+            when(projectRepository.save(any(Project.class))).thenReturn(project);
+            when(mapper.toResponse(project)).thenReturn(stubResponse(projectId));
+
+            service.patch(projectId, new ProjectPatchRequest(null, "New desc"), userId);
+
+            ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+            verify(projectRepository).save(captor.capture());
+            assertEquals("Original", captor.getValue().getName());
+            assertEquals("New desc", captor.getValue().getDescription());
+        }
+
+        @Test
+        void shouldThrowWhenNotFoundOnPatch() {
+            when(projectRepository.findActiveByIdForUser(projectId, userId)).thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.patch(projectId, new ProjectPatchRequest("x", null), userId));
+        }
     }
 
     @Nested

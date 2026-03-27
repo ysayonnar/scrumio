@@ -167,6 +167,33 @@ class UserServiceTest {
             assertEquals("Patched", captor.getValue().getName());
             assertEquals("original@example.com", captor.getValue().getEmail());
         }
+
+        @Test
+        void shouldPatchEmailAndPassword() {
+            User existing = stubUser(userId);
+            existing.setName("Original");
+            existing.setEmail("original@example.com");
+            existing.setPasswordHash("oldpass");
+            when(userRepository.findActiveById(userId)).thenReturn(Optional.of(existing));
+            when(userRepository.save(any(User.class))).thenReturn(existing);
+            when(mapper.toResponse(existing)).thenReturn(stubResponse(userId));
+
+            UserPatchRequest request = new UserPatchRequest(null, "new@example.com", "newpass");
+            service.patch(userId, request);
+
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(captor.capture());
+            assertEquals("Original", captor.getValue().getName());
+            assertEquals("new@example.com", captor.getValue().getEmail());
+            assertEquals("newpass", captor.getValue().getPasswordHash());
+        }
+
+        @Test
+        void shouldThrowWhenNotFoundOnPatch() {
+            when(userRepository.findActiveById(userId)).thenReturn(Optional.empty());
+
+            assertThrows(UserNotFoundException.class, () -> service.patch(userId, new UserPatchRequest(null, null, null)));
+        }
     }
 
     @Nested

@@ -173,6 +173,57 @@ class SprintServiceTest {
 
             assertThrows(ProjectNotFoundException.class, () -> service.create(request, userId));
         }
+
+        @Test
+        void shouldThrowWhenProjectNotFoundOnCreate() {
+            stubMembership();
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.create(validRequest(), userId));
+        }
+    }
+
+    @Nested
+    class Update {
+
+        @Test
+        void shouldUpdateSprint() {
+            when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.of(sprint));
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.of(project));
+            when(sprintRepository.save(any(Sprint.class))).thenReturn(sprint);
+            when(mapper.toResponse(sprint)).thenReturn(stubResponse(sprintId));
+
+            SprintResponse result = service.update(sprintId, validRequest(), userId);
+
+            assertNotNull(result);
+            verify(sprintRepository).save(any(Sprint.class));
+        }
+
+        @Test
+        void shouldThrowWhenSprintNotFoundOnUpdate() {
+            when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.empty());
+
+            assertThrows(SprintNotFoundException.class, () -> service.update(sprintId, validRequest(), userId));
+        }
+
+        @Test
+        void shouldThrowWhenProjectNotFoundOnUpdate() {
+            when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.of(sprint));
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.update(sprintId, validRequest(), userId));
+        }
+
+        @Test
+        void shouldThrowWhenStartDateNotBeforeEndDateOnUpdate() {
+            when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.of(sprint));
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.of(project));
+            SprintRequest request = new SprintRequest("Sprint 1", null, null,
+                    LocalDate.now().plusDays(1), LocalDate.now(),
+                    SprintStatus.PLANNED, SprintEstimationType.STORY_POINTS, projectId);
+
+            assertThrows(IllegalArgumentException.class, () -> service.update(sprintId, request, userId));
+        }
     }
 
     @Nested
@@ -190,6 +241,35 @@ class SprintServiceTest {
             ArgumentCaptor<Sprint> captor = ArgumentCaptor.forClass(Sprint.class);
             verify(sprintRepository).save(captor.capture());
             assertEquals("Patched", captor.getValue().getName());
+        }
+
+        @Test
+        void shouldPatchAllRemainingFields() {
+            when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.of(sprint));
+            when(sprintRepository.save(any(Sprint.class))).thenReturn(sprint);
+            when(mapper.toResponse(sprint)).thenReturn(stubResponse(sprintId));
+
+            LocalDate start = LocalDate.now();
+            LocalDate end = LocalDate.now().plusDays(7);
+            service.patch(sprintId, new SprintPatchRequest(null, "goal", "plan", start, end,
+                    SprintStatus.ACTIVE, SprintEstimationType.HOURS), userId);
+
+            ArgumentCaptor<Sprint> captor = ArgumentCaptor.forClass(Sprint.class);
+            verify(sprintRepository).save(captor.capture());
+            assertEquals("goal", captor.getValue().getBusinessGoal());
+            assertEquals("plan", captor.getValue().getDevPlan());
+            assertEquals(start, captor.getValue().getStartDate());
+            assertEquals(end, captor.getValue().getEndDate());
+            assertEquals(SprintStatus.ACTIVE, captor.getValue().getStatus());
+            assertEquals(SprintEstimationType.HOURS, captor.getValue().getEstimationType());
+        }
+
+        @Test
+        void shouldThrowWhenNotFoundOnPatch() {
+            when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.empty());
+
+            assertThrows(SprintNotFoundException.class,
+                    () -> service.patch(sprintId, new SprintPatchRequest(null, null, null, null, null, null, null), userId));
         }
     }
 
