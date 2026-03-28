@@ -46,3 +46,6 @@ scrumio-final.drawio
 ### Frontend ###
 frontend/node_modules/
 frontend/dist/
+
+jmeter/report
+jmeter/results.jtl

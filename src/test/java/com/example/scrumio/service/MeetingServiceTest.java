@@ -11,6 +11,7 @@ import com.example.scrumio.repository.MeetingRepository;
 import com.example.scrumio.repository.ProjectMemberRepository;
 import com.example.scrumio.repository.ProjectRepository;
 import com.example.scrumio.repository.SprintRepository;
+import com.example.scrumio.web.dto.MeetingPatchRequest;
 import com.example.scrumio.web.dto.MeetingRequest;
 import com.example.scrumio.web.dto.MeetingResponse;
 import com.example.scrumio.web.dto.MeetingWithMembersRequest;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -107,6 +109,30 @@ class MeetingServiceTest {
     }
 
     @Nested
+    class GetAll {
+
+        @Test
+        void shouldReturnMeetings() {
+            stubMembership();
+            Meeting meeting = stubMeeting(meetingId);
+            when(meetingRepository.findAllActiveByProjectId(projectId)).thenReturn(List.of(meeting));
+            when(mapper.toResponse(meeting)).thenReturn(stubResponse(meetingId));
+
+            List<MeetingResponse> result = service.getAll(projectId, userId);
+
+            assertEquals(1, result.size());
+        }
+
+        @Test
+        void shouldThrowWhenNotMember() {
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.getAll(projectId, userId));
+        }
+    }
+
+    @Nested
     class Create {
 
         @Test
@@ -161,6 +187,116 @@ class MeetingServiceTest {
                     start, start.plusHours(1), sprintId, projectId);
 
             assertThrows(IllegalArgumentException.class, () -> service.create(request, userId));
+        }
+
+        @Test
+        void shouldCreateMeetingWithValidSprint() {
+            stubMembership();
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.of(project));
+            when(sprintRepository.findActiveById(sprintId)).thenReturn(Optional.of(sprint));
+            Meeting saved = stubMeeting(meetingId);
+            when(meetingRepository.save(any(Meeting.class))).thenReturn(saved);
+            when(mapper.toResponse(saved)).thenReturn(stubResponse(meetingId));
+
+            OffsetDateTime start = OffsetDateTime.now();
+            MeetingRequest request = new MeetingRequest("Stand-up", null, MeetingType.DAILY,
+                    start, start.plusHours(1), sprintId, projectId);
+            MeetingResponse result = service.create(request, userId);
+
+            assertNotNull(result);
+        }
+
+        @Test
+        void shouldThrowWhenNotMemberOnCreate() {
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.create(validRequest(), userId));
+        }
+
+        @Test
+        void shouldThrowWhenProjectNotFoundOnCreate() {
+            stubMembership();
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.create(validRequest(), userId));
+        }
+    }
+
+    @Nested
+    class Update {
+
+        @Test
+        void shouldUpdateMeeting() {
+            Meeting meeting = stubMeeting(meetingId);
+            when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.of(meeting));
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.of(project));
+            when(meetingRepository.save(any(Meeting.class))).thenReturn(meeting);
+            when(mapper.toResponse(meeting)).thenReturn(stubResponse(meetingId));
+
+            MeetingResponse result = service.update(meetingId, validRequest(), userId);
+
+            assertNotNull(result);
+            verify(meetingRepository).save(any(Meeting.class));
+        }
+
+        @Test
+        void shouldThrowWhenMeetingNotFoundOnUpdate() {
+            when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.empty());
+
+            assertThrows(MeetingNotFoundException.class, () -> service.update(meetingId, validRequest(), userId));
+        }
+
+        @Test
+        void shouldThrowWhenInvalidTimesOnUpdate() {
+            Meeting meeting = stubMeeting(meetingId);
+            when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.of(meeting));
+            OffsetDateTime time = OffsetDateTime.now();
+            MeetingRequest request = new MeetingRequest("Stand-up", null, MeetingType.DAILY,
+                    time, time, null, projectId);
+
+            assertThrows(IllegalArgumentException.class, () -> service.update(meetingId, request, userId));
+        }
+    }
+
+    @Nested
+    class Patch {
+
+        @Test
+        void shouldPatchAllProvidedFields() {
+            Meeting meeting = stubMeeting(meetingId);
+            when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.of(meeting));
+            when(meetingRepository.save(any(Meeting.class))).thenReturn(meeting);
+            when(mapper.toResponse(meeting)).thenReturn(stubResponse(meetingId));
+
+            OffsetDateTime start = OffsetDateTime.now();
+            MeetingPatchRequest request = new MeetingPatchRequest("Updated", "desc", MeetingType.REVIEW,
+                    start, start.plusHours(2));
+            MeetingResponse result = service.patch(meetingId, request, userId);
+
+            assertNotNull(result);
+            verify(meetingRepository).save(any(Meeting.class));
+        }
+
+        @Test
+        void shouldPatchWithNullFields() {
+            Meeting meeting = stubMeeting(meetingId);
+            when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.of(meeting));
+            when(meetingRepository.save(any(Meeting.class))).thenReturn(meeting);
+            when(mapper.toResponse(meeting)).thenReturn(stubResponse(meetingId));
+
+            MeetingPatchRequest request = new MeetingPatchRequest(null, null, null, null, null);
+            MeetingResponse result = service.patch(meetingId, request, userId);
+
+            assertNotNull(result);
+        }
+
+        @Test
+        void shouldThrowWhenNotFoundOnPatch() {
+            when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.empty());
+
+            assertThrows(MeetingNotFoundException.class,
+                    () -> service.patch(meetingId, new MeetingPatchRequest(null, null, null, null, null), userId));
         }
     }
 
@@ -256,6 +392,36 @@ class MeetingServiceTest {
 
     @Nested
     class CreateWithMembersUnsafe {
+
+        @Test
+        void shouldCreateMeetingWithMembersUnsafe() {
+            stubMembership();
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.of(project));
+            when(meetingRepository.save(any(Meeting.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            UUID member1 = UUID.randomUUID();
+            UUID member2 = UUID.randomUUID();
+            ProjectMember pm1 = new ProjectMember();
+            pm1.setId(member1);
+            ProjectMember pm2 = new ProjectMember();
+            pm2.setId(member2);
+            when(projectMemberRepository.findActiveByIdAndProjectId(member1, projectId))
+                    .thenReturn(Optional.of(pm1));
+            when(projectMemberRepository.findActiveByIdAndProjectId(member2, projectId))
+                    .thenReturn(Optional.of(pm2));
+
+            OffsetDateTime start = OffsetDateTime.now();
+            MeetingWithMembersRequest request = new MeetingWithMembersRequest(
+                    "Review", null, MeetingType.REVIEW,
+                    start, start.plusHours(1), null, projectId, List.of(member1, member2));
+            when(mapper.toResponse(any(Meeting.class))).thenReturn(stubResponse(meetingId));
+
+            MeetingResponse result = service.createWithMembersUnsafe(request, userId);
+
+            assertNotNull(result);
+            verify(meetingMemberRepository, times(2)).save(any());
+            verify(projectMemberRepository, never()).findAllActiveByIdsAndProjectId(any(), any());
+        }
 
         @Test
         void shouldThrowWhenMemberNotFoundInUnsafe() {

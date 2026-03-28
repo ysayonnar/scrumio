@@ -104,6 +104,35 @@ class ProjectMemberServiceTest {
     class AddMember {
 
         @Test
+        void shouldAddMemberWhenManager() {
+            requestingMember.setRole(ProjectMemberRole.MANAGER);
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.of(requestingMember));
+
+            UUID newUserId = UUID.randomUUID();
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, newUserId))
+                    .thenReturn(Optional.empty());
+
+            User user = new User();
+            user.setId(newUserId);
+            when(userRepository.findActiveById(newUserId)).thenReturn(Optional.of(user));
+
+            Project project = new Project();
+            project.setId(projectId);
+            when(projectRepository.findActiveById(projectId)).thenReturn(Optional.of(project));
+
+            ProjectMember saved = new ProjectMember();
+            saved.setId(memberId);
+            when(projectMemberRepository.save(any(ProjectMember.class))).thenReturn(saved);
+            when(mapper.toResponse(saved)).thenReturn(stubResponse(memberId));
+
+            ProjectMemberRequest request = new ProjectMemberRequest(newUserId, ProjectMemberRole.DEVELOPER);
+            ProjectMemberResponse result = service.addMember(projectId, request, userId);
+
+            assertNotNull(result);
+        }
+
+        @Test
         void shouldAddMemberWhenOwner() {
             when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
                     .thenReturn(Optional.of(requestingMember));
@@ -189,6 +218,17 @@ class ProjectMemberServiceTest {
             ProjectMemberResponse result = service.updateRole(projectId, memberId, request, userId);
 
             assertNotNull(result);
+        }
+
+        @Test
+        void shouldThrowWhenNotOwnerOrManagerOnUpdateRole() {
+            requestingMember.setRole(ProjectMemberRole.DEVELOPER);
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.of(requestingMember));
+
+            ProjectMemberRequest request = new ProjectMemberRequest(UUID.randomUUID(), ProjectMemberRole.MANAGER);
+            assertThrows(UnauthorizedException.class,
+                    () -> service.updateRole(projectId, memberId, request, userId));
         }
 
         @Test

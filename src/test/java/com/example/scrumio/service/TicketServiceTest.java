@@ -1,9 +1,11 @@
 package com.example.scrumio.service;
 
 import com.example.scrumio.cache.TicketCacheIndex;
+import com.example.scrumio.cache.TicketCacheKey;
 import com.example.scrumio.entity.project.Project;
 import com.example.scrumio.entity.project.ProjectMember;
 import com.example.scrumio.entity.sprint.Sprint;
+import com.example.scrumio.entity.sprint.SprintStatus;
 import com.example.scrumio.entity.ticket.MemberTicket;
 import com.example.scrumio.entity.ticket.Ticket;
 import com.example.scrumio.entity.ticket.TicketPriority;
@@ -31,6 +33,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -114,6 +120,125 @@ class TicketServiceTest {
     private void stubMembership() {
         when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
                 .thenReturn(Optional.of(stubMember(UUID.randomUUID())));
+    }
+
+    @Nested
+    class GetAll {
+
+        @Test
+        void shouldReturnCachedPage() {
+            stubMembership();
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<TicketResponse> cached = new PageImpl<>(List.of(stubResponse(UUID.randomUUID())));
+            when(cacheIndex.get(any(TicketCacheKey.class))).thenReturn(Optional.of(cached));
+
+            Page<TicketResponse> result = service.getAll(projectId, userId, null, null, null, pageable);
+
+            assertEquals(cached, result);
+            verify(ticketRepository, never()).findAllActiveByProjectId(any(), any(), any(), any(), any());
+        }
+
+        @Test
+        void shouldQueryAndCacheOnCacheMiss() {
+            stubMembership();
+            Pageable pageable = PageRequest.of(0, 10);
+            Ticket ticket = stubTicket(UUID.randomUUID());
+            Page<Ticket> dbPage = new PageImpl<>(List.of(ticket));
+            when(cacheIndex.get(any(TicketCacheKey.class))).thenReturn(Optional.empty());
+            when(ticketRepository.findAllActiveByProjectId(eq(projectId), any(), any(), any(), eq(pageable)))
+                    .thenReturn(dbPage);
+            when(mapper.toResponse(ticket)).thenReturn(stubResponse(ticket.getId()));
+
+            Page<TicketResponse> result = service.getAll(projectId, userId, TicketStatus.TODO, TicketPriority.HIGH, SprintStatus.ACTIVE, pageable);
+
+            assertNotNull(result);
+            verify(cacheIndex).put(any(TicketCacheKey.class), any());
+        }
+
+        @Test
+        void shouldThrowWhenNotMember() {
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class,
+                    () -> service.getAll(projectId, userId, null, null, null, PageRequest.of(0, 10)));
+        }
+    }
+
+    @Nested
+    class GetAllNative {
+
+        @Test
+        void shouldReturnNativePage() {
+            stubMembership();
+            Pageable pageable = PageRequest.of(0, 10);
+            when(ticketRepository.findAllActiveByProjectIdNative(eq(projectId), any(), any(), any(), eq(pageable)))
+                    .thenReturn(Page.empty());
+
+            Page<TicketResponse> result = service.getAllNative(projectId, userId, TicketStatus.TODO, TicketPriority.HIGH, SprintStatus.ACTIVE, pageable);
+
+            assertNotNull(result);
+        }
+
+        @Test
+        void shouldHandleNullFilters() {
+            stubMembership();
+            Pageable pageable = PageRequest.of(0, 10);
+            when(ticketRepository.findAllActiveByProjectIdNative(eq(projectId), eq(null), eq(null), eq(null), eq(pageable)))
+                    .thenReturn(Page.empty());
+
+            Page<TicketResponse> result = service.getAllNative(projectId, userId, null, null, null, pageable);
+
+            assertNotNull(result);
+        }
+    }
+
+    @Nested
+    class GetAllSafe {
+
+        @Test
+        void shouldReturnSafeList() {
+            stubMembership();
+            Ticket ticket = stubTicket(UUID.randomUUID());
+            when(ticketRepository.findAllActiveByProjectIdSafe(projectId)).thenReturn(List.of(ticket));
+            when(mapper.toResponse(ticket)).thenReturn(stubResponse(ticket.getId()));
+
+            List<TicketResponse> result = service.getAllSafe(projectId, userId);
+
+            assertEquals(1, result.size());
+        }
+
+        @Test
+        void shouldThrowWhenNotMember() {
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.getAllSafe(projectId, userId));
+        }
+    }
+
+    @Nested
+    class GetAllUnsafe {
+
+        @Test
+        void shouldReturnUnsafeList() {
+            stubMembership();
+            Ticket ticket = stubTicket(UUID.randomUUID());
+            when(ticketRepository.findAllActiveByProjectIdUnsafe(projectId)).thenReturn(List.of(ticket));
+            when(mapper.toResponse(ticket)).thenReturn(stubResponse(ticket.getId()));
+
+            List<TicketResponse> result = service.getAllUnsafe(projectId, userId);
+
+            assertEquals(1, result.size());
+        }
+
+        @Test
+        void shouldThrowWhenNotMember() {
+            when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(ProjectNotFoundException.class, () -> service.getAllUnsafe(projectId, userId));
+        }
     }
 
     @Nested
@@ -284,6 +409,37 @@ class TicketServiceTest {
             verify(ticketRepository).save(captor.capture());
             assertEquals("Patched", captor.getValue().getTitle());
             assertEquals("Original desc", captor.getValue().getDescription());
+        }
+
+        @Test
+        void shouldPatchAllRemainingFields() {
+            UUID ticketId = UUID.randomUUID();
+            Ticket existing = stubTicket(ticketId);
+            existing.setProject(project);
+            when(ticketRepository.findActiveByIdForUser(ticketId, userId)).thenReturn(Optional.of(existing));
+            when(sprintRepository.findActiveById(sprintId)).thenReturn(Optional.of(sprint));
+            when(ticketRepository.save(any(Ticket.class))).thenReturn(existing);
+            when(mapper.toResponse(existing)).thenReturn(stubResponse(ticketId));
+
+            TicketPatchRequest request = new TicketPatchRequest(null, "desc", TicketPriority.LOW, TicketStatus.IN_PROGRESS, 5, sprintId);
+            service.patch(ticketId, request, userId);
+
+            ArgumentCaptor<Ticket> captor = ArgumentCaptor.forClass(Ticket.class);
+            verify(ticketRepository).save(captor.capture());
+            assertEquals("desc", captor.getValue().getDescription());
+            assertEquals(TicketPriority.LOW, captor.getValue().getPriority());
+            assertEquals(TicketStatus.IN_PROGRESS, captor.getValue().getStatus());
+            assertEquals(5, captor.getValue().getEstimation());
+            assertEquals(sprint, captor.getValue().getSprint());
+        }
+
+        @Test
+        void shouldThrowWhenNotFoundOnPatch() {
+            UUID ticketId = UUID.randomUUID();
+            when(ticketRepository.findActiveByIdForUser(ticketId, userId)).thenReturn(Optional.empty());
+
+            assertThrows(TicketNotFoundException.class,
+                    () -> service.patch(ticketId, new TicketPatchRequest(null, null, null, null, null, null), userId));
         }
     }
 
