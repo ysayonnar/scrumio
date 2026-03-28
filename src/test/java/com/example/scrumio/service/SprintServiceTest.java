@@ -179,7 +179,9 @@ class SprintServiceTest {
             stubMembership();
             when(projectRepository.findActiveById(projectId)).thenReturn(Optional.empty());
 
-            assertThrows(ProjectNotFoundException.class, () -> service.create(validRequest(), userId));
+            SprintRequest request = validRequest();
+
+            assertThrows(ProjectNotFoundException.class, () -> service.create(request, userId));
         }
     }
 
@@ -203,7 +205,9 @@ class SprintServiceTest {
         void shouldThrowWhenSprintNotFoundOnUpdate() {
             when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.empty());
 
-            assertThrows(SprintNotFoundException.class, () -> service.update(sprintId, validRequest(), userId));
+            SprintRequest request = validRequest();
+
+            assertThrows(SprintNotFoundException.class, () -> service.update(sprintId, request, userId));
         }
 
         @Test
@@ -211,7 +215,9 @@ class SprintServiceTest {
             when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.of(sprint));
             when(projectRepository.findActiveById(projectId)).thenReturn(Optional.empty());
 
-            assertThrows(ProjectNotFoundException.class, () -> service.update(sprintId, validRequest(), userId));
+            SprintRequest request = validRequest();
+
+            assertThrows(ProjectNotFoundException.class, () -> service.update(sprintId, request, userId));
         }
 
         @Test
@@ -268,8 +274,9 @@ class SprintServiceTest {
         void shouldThrowWhenNotFoundOnPatch() {
             when(sprintRepository.findActiveByIdForUser(sprintId, userId)).thenReturn(Optional.empty());
 
-            assertThrows(SprintNotFoundException.class,
-                    () -> service.patch(sprintId, new SprintPatchRequest(null, null, null, null, null, null, null), userId));
+            SprintPatchRequest request = new SprintPatchRequest(null, null, null, null, null, null, null);
+
+            assertThrows(SprintNotFoundException.class, () -> service.patch(sprintId, request, userId));
         }
     }
 

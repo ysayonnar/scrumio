@@ -78,8 +78,11 @@ public class ConcurrencyService {
             });
         }
 
-        latch.await(30, TimeUnit.SECONDS);
+        boolean completed = awaitLatch(latch);
         executor.shutdown();
+        if (!completed) {
+            throw new IllegalStateException("Race condition threads did not finish within timeout");
+        }
 
         long safeResult = safeCounter.get();
         long unsafeResult = unsafeCounter[0];
@@ -93,5 +96,9 @@ public class ConcurrencyService {
                 safeResult == expected,
                 unsafeResult != expected
         );
+    }
+
+    boolean awaitLatch(CountDownLatch latch) throws InterruptedException {
+        return latch.await(30, TimeUnit.SECONDS);
     }
 }

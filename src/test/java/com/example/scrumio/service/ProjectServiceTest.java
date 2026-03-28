@@ -210,7 +210,9 @@ class ProjectServiceTest {
         void shouldThrowWhenNotFoundOnPatch() {
             when(projectRepository.findActiveByIdForUser(projectId, userId)).thenReturn(Optional.empty());
 
-            assertThrows(ProjectNotFoundException.class, () -> service.patch(projectId, new ProjectPatchRequest("x", null), userId));
+            ProjectPatchRequest request = new ProjectPatchRequest("x", null);
+
+            assertThrows(ProjectNotFoundException.class, () -> service.patch(projectId, request, userId));
         }
     }
 

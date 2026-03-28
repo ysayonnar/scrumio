@@ -49,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -160,8 +161,10 @@ class TicketServiceTest {
             when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
                     .thenReturn(Optional.empty());
 
+            Pageable pageable = PageRequest.of(0, 10);
+
             assertThrows(ProjectNotFoundException.class,
-                    () -> service.getAll(projectId, userId, null, null, null, PageRequest.of(0, 10)));
+                    () -> service.getAll(projectId, userId, null, null, null, pageable));
         }
     }
 
@@ -184,7 +187,7 @@ class TicketServiceTest {
         void shouldHandleNullFilters() {
             stubMembership();
             Pageable pageable = PageRequest.of(0, 10);
-            when(ticketRepository.findAllActiveByProjectIdNative(eq(projectId), eq(null), eq(null), eq(null), eq(pageable)))
+            when(ticketRepository.findAllActiveByProjectIdNative(eq(projectId), isNull(), isNull(), isNull(), eq(pageable)))
                     .thenReturn(Page.empty());
 
             Page<TicketResponse> result = service.getAllNative(projectId, userId, null, null, null, pageable);
@@ -438,8 +441,9 @@ class TicketServiceTest {
             UUID ticketId = UUID.randomUUID();
             when(ticketRepository.findActiveByIdForUser(ticketId, userId)).thenReturn(Optional.empty());
 
-            assertThrows(TicketNotFoundException.class,
-                    () -> service.patch(ticketId, new TicketPatchRequest(null, null, null, null, null, null), userId));
+            TicketPatchRequest request = new TicketPatchRequest(null, null, null, null, null, null);
+
+            assertThrows(TicketNotFoundException.class, () -> service.patch(ticketId, request, userId));
         }
     }
 

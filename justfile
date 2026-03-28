@@ -24,6 +24,9 @@ demo-counter:
     curl -s "http://localhost:8080/api/v1/concurrency/counter"
     @echo ""
 
+front:
+    cd frontend && npm install && npm run dev
+
 test-async:
     rm -f jmeter/results.jtl
     rm -rf jmeter/report

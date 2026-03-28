@@ -7,7 +7,6 @@ import com.example.scrumio.web.dto.CounterResponse;
 import com.example.scrumio.web.dto.RaceConditionResponse;
 import com.example.scrumio.web.dto.TaskResponse;
 import com.example.scrumio.web.exception.TaskNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,8 +18,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -127,7 +124,7 @@ class ConcurrencyServiceTest {
             assertEquals(50_000L, response.expected());
             assertEquals(50_000L, response.safeResult());
             assertTrue(response.safeCorrect());
-            assertNotNull(response.unsafeResult());
+            assertTrue(response.unsafeResult() >= 0);
         }
 
         @Test
@@ -142,7 +139,20 @@ class ConcurrencyServiceTest {
                     break;
                 }
             }
-            assertTrue(raceOccurredAtLeastOnce, "Race condition should occur at least once in 5 attempts with 50 threads");
+            assertTrue(raceOccurredAtLeastOnce,
+                    "Race condition should occur at least once in 5 attempts with 50 threads");
+        }
+
+        @Test
+        void shouldThrowWhenLatchTimesOut() {
+            ConcurrencyService timedOutService = new ConcurrencyService(taskStore, asyncTaskService, counterService) {
+                @Override
+                boolean awaitLatch(java.util.concurrent.CountDownLatch latch) {
+                    return false;
+                }
+            };
+
+            assertThrows(IllegalStateException.class, timedOutService::runRaceCondition);
         }
 
         @Test
@@ -152,7 +162,7 @@ class ConcurrencyServiceTest {
             for (int i = 0; i < 3; i++) {
                 RaceConditionResponse response = realService.runRaceCondition();
                 assertTrue(response.safeCorrect(), "AtomicLong must always produce correct result");
-                assertFalse(response.safeResult() != response.expected(),
+                assertEquals(response.expected(), response.safeResult(),
                         "Safe counter must equal expected after each run");
             }
         }

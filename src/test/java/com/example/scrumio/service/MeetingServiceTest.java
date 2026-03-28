@@ -210,16 +210,18 @@ class MeetingServiceTest {
         void shouldThrowWhenNotMemberOnCreate() {
             when(projectMemberRepository.findActiveByProjectAndUser(projectId, userId))
                     .thenReturn(Optional.empty());
+            MeetingRequest request = validRequest();
 
-            assertThrows(ProjectNotFoundException.class, () -> service.create(validRequest(), userId));
+            assertThrows(ProjectNotFoundException.class, () -> service.create(request, userId));
         }
 
         @Test
         void shouldThrowWhenProjectNotFoundOnCreate() {
             stubMembership();
             when(projectRepository.findActiveById(projectId)).thenReturn(Optional.empty());
+            MeetingRequest request = validRequest();
 
-            assertThrows(ProjectNotFoundException.class, () -> service.create(validRequest(), userId));
+            assertThrows(ProjectNotFoundException.class, () -> service.create(request, userId));
         }
     }
 
@@ -243,8 +245,9 @@ class MeetingServiceTest {
         @Test
         void shouldThrowWhenMeetingNotFoundOnUpdate() {
             when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.empty());
+            MeetingRequest request = validRequest();
 
-            assertThrows(MeetingNotFoundException.class, () -> service.update(meetingId, validRequest(), userId));
+            assertThrows(MeetingNotFoundException.class, () -> service.update(meetingId, request, userId));
         }
 
         @Test
@@ -295,8 +298,9 @@ class MeetingServiceTest {
         void shouldThrowWhenNotFoundOnPatch() {
             when(meetingRepository.findActiveByIdForUser(meetingId, userId)).thenReturn(Optional.empty());
 
-            assertThrows(MeetingNotFoundException.class,
-                    () -> service.patch(meetingId, new MeetingPatchRequest(null, null, null, null, null), userId));
+            MeetingPatchRequest request = new MeetingPatchRequest(null, null, null, null, null);
+
+            assertThrows(MeetingNotFoundException.class, () -> service.patch(meetingId, request, userId));
         }
     }
 

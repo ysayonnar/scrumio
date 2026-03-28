@@ -26,7 +26,7 @@ public class AsyncTaskService {
                 Thread.sleep(15000);
                 state.setResult("Processed payload='" + payload + "' at " + OffsetDateTime.now());
                 state.setStatus(TaskStatus.COMPLETED);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException _) {
                 Thread.currentThread().interrupt();
                 state.setStatus(TaskStatus.FAILED);
                 state.setResult("Task was interrupted");

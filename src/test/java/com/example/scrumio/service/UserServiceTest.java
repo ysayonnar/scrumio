@@ -192,7 +192,9 @@ class UserServiceTest {
         void shouldThrowWhenNotFoundOnPatch() {
             when(userRepository.findActiveById(userId)).thenReturn(Optional.empty());
 
-            assertThrows(UserNotFoundException.class, () -> service.patch(userId, new UserPatchRequest(null, null, null)));
+            UserPatchRequest request = new UserPatchRequest(null, null, null);
+
+            assertThrows(UserNotFoundException.class, () -> service.patch(userId, request));
         }
     }
 
