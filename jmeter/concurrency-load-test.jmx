@@ -42,11 +42,14 @@
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <JSONPathExtractor guiclass="JSONPathExtractorGui" testclass="JSONPathExtractor" testname="Extract taskId">
-            <stringProp name="JSONPathExtractor.referenceName">taskId</stringProp>
-            <stringProp name="JSONPathExtractor.jsonPathExpr">$.task_id</stringProp>
-            <stringProp name="JSONPathExtractor.defaultValue">MISSING</stringProp>
-          </JSONPathExtractor>
+          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract taskId">
+            <stringProp name="RegexExtractor.refname">taskId</stringProp>
+            <stringProp name="RegexExtractor.regex">"task_id":"([^"]+)"</stringProp>
+            <stringProp name="RegexExtractor.template">$1$</stringProp>
+            <stringProp name="RegexExtractor.default">MISSING</stringProp>
+            <stringProp name="RegexExtractor.match_number">1</stringProp>
+            <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+          </RegexExtractor>
           <hashTree/>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert 201">
             <collectionProp name="Asserion.test_strings">
@@ -58,15 +61,12 @@
           <hashTree/>
         </hashTree>
 
-        <GenericSampler guiclass="GenericSamplerGui" testclass="GenericSampler" testname="Wait 1s before polling">
-          <stringProp name="GenericSampler.result">Wait</stringProp>
-        </GenericSampler>
-        <hashTree>
-          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="1s delay">
-            <stringProp name="ConstantTimer.delay">1000</stringProp>
-          </ConstantTimer>
-          <hashTree/>
-        </hashTree>
+        <TestAction guiclass="TestActionGui" testclass="TestAction" testname="Wait 1s before polling">
+          <intProp name="ActionProcessor.action">1</intProp>
+          <intProp name="ActionProcessor.target">0</intProp>
+          <stringProp name="ActionProcessor.duration">1000</stringProp>
+        </TestAction>
+        <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/v1/concurrency/tasks/{id}">
           <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
@@ -163,12 +163,13 @@
             <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
           </ResponseAssertion>
           <hashTree/>
-          <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Safe counter must be correct">
-            <stringProp name="JSON_PATH">$.safe_correct</stringProp>
-            <stringProp name="EXPECTED_VALUE">true</stringProp>
-            <boolProp name="JSONVALIDATION">true</boolProp>
-            <boolProp name="EXPECT_NULL">false</boolProp>
-          </JSONPathAssertion>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Safe counter must be correct">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="safe_correct">"safe_correct":true</stringProp>
+            </collectionProp>
+            <intProp name="Assertion.test_type">2</intProp>
+            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+          </ResponseAssertion>
           <hashTree/>
         </hashTree>
       </hashTree>

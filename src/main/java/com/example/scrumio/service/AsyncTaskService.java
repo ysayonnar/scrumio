@@ -1,6 +1,5 @@
 package com.example.scrumio.service;
 
-import com.example.scrumio.concurrency.TaskState;
 import com.example.scrumio.concurrency.TaskStatus;
 import com.example.scrumio.concurrency.TaskStore;
 import org.springframework.scheduling.annotation.Async;
@@ -24,7 +23,7 @@ public class AsyncTaskService {
         taskStore.find(taskId).ifPresent(state -> {
             state.setStatus(TaskStatus.RUNNING);
             try {
-                Thread.sleep(5000);
+                Thread.sleep(15000);
                 state.setResult("Processed payload='" + payload + "' at " + OffsetDateTime.now());
                 state.setStatus(TaskStatus.COMPLETED);
             } catch (InterruptedException e) {
