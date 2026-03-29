@@ -34,7 +34,11 @@ client.interceptors.response.use(
     return res
   },
   (error) => {
-    if (error.response?.status === 401) window.location.href = '/login'
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth')
+      window.dispatchEvent(new Event('auth:expired'))
+      return Promise.reject(error)
+    }
     if (error.response?.data) {
       error.response.data = transformKeys(error.response.data, toCamelCase)
     }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { login as apiLogin, logout as apiLogout, register as apiRegister } from '../api/auth'
 
 interface AuthContextValue {
@@ -29,6 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (email: string, password: string) => {
     await apiRegister(email, password)
+  }, [])
+
+  useEffect(() => {
+    const handler = () => {
+      setIsAuthenticated(false)
+      localStorage.removeItem('auth')
+    }
+    window.addEventListener('auth:expired', handler)
+    return () => window.removeEventListener('auth:expired', handler)
   }, [])
 
   return (
