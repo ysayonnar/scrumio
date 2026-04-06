@@ -9,18 +9,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew build
 
 # Run application (requires PostgreSQL running)
-make run                  # or: ./gradlew bootRun
+just run                  # exports .env and runs ./gradlew bootRun
 
 # Tests
 ./gradlew test
 ./gradlew test --tests "com.example.scrumio.SomeTest"   # single test
+just test                 # alias
 
 # Database
-make postgres-up          # start PostgreSQL container
-make postgres-down        # stop PostgreSQL container
+just up                   # docker compose up with build
+just down                 # docker compose down
+just apply-migrations     # flywayMigrate + flywayInfo + flywayValidate
+
+# Frontend
+just front                # cd frontend && npm install && npm run dev
+
+# Concurrency demo
+just demo-counter         # 10 parallel counter increments (race condition demo)
+just test-async           # JMeter load test for concurrency
 
 # Other
-make todos                # find TODO comments in code
 ./gradlew clean
 ```
 
@@ -48,7 +56,7 @@ Package root: `com.example.scrumio`
 
 All endpoints except `POST /api/v1/users` require `@RequireAuth`.
 
-`AuthInterceptor` calls `${AUTH_SERVICE_URL}/auth` with request cookies. On success it stores `userId` and `role` in the request attributes. `AuthContext.getUserId()` / `AuthContext.getRole()` retrieve them in services.
+`AuthInterceptor` calls `${auth-service.url}/auth` with request cookies. On success it stores `userId` and `role` in the request attributes. `AuthContext.getUserId()` / `AuthContext.getRole()` retrieve them in services.
 
 Membership is verified via `projectMemberRepository.findActiveByProjectAndUser(projectId, userId)` — throws `ProjectNotFoundException` if the user is not a member.
 
@@ -72,10 +80,11 @@ Local DB: `localhost:5432`, database `scrumio_db`, user/password `admin/admin` (
 | UserController | `/api/v1/users` | `POST /` is public; all others `@RequireAuth` |
 | ProjectController | `/api/v1/projects` | all `@RequireAuth` |
 | SprintController | `/api/v1/sprints` | `GET /` requires `?project_id=` |
-| TicketController | `/api/v1/tickets` | `GET /` requires `?project_id=`; optional `?status=&priority=`; `/safe` and `/unsafe` are N+1 demos |
+| TicketController | `/api/v1/tickets` | `GET /` requires `?project_id=`; optional `?status=&priority=&sprint_status=&page=&size=`; `/native` uses native query; `/safe` and `/unsafe` are N+1 demos; `POST /bulk` (transactional batch) and `POST /bulk-unsafe` (N+1 demo) |
 | MeetingController | `/api/v1/meetings` | `GET /` requires `?project_id=`; `POST /with-members` (safe, `@Transactional`), `POST /with-members-unsafe` (NOT_SUPPORTED, N+1 demo) |
 | ProjectMemberController | `/api/v1/projects/{projectId}/members` | OWNER/MANAGER can add/updateRole; OWNER-only remove |
 | MemberTicketController | `/api/v1/tickets/{ticketId}/members` | assign/unassign members to tickets |
+| ConcurrencyController | `/api/v1/concurrency` | `POST /tasks`, `GET /tasks/{id}`, `POST /counter/increment`, `GET /counter`, `POST /race` — concurrency demos (no auth) |
 
 Response conventions: POST → `201 CREATED`; DELETE → soft-deleted entity `200 OK`.
 
@@ -83,11 +92,15 @@ Response conventions: POST → `201 CREATED`; DELETE → soft-deleted entity `20
 
 `GlobalExceptionHandler` handles:
 
-- `NotFoundException` subclasses (User/Project/Sprint/Ticket/Meeting/ProjectMember/MemberTicket) → `404`
+- `NotFoundException` subclasses (User/Project/Sprint/Ticket/Meeting/ProjectMember/MemberTicket/Task) → `404`
 - `UnauthorizedException` → `401`
 - `ServiceUnavailableException` → `503`
 - `MethodArgumentNotValidException` → `400`
 - `IllegalArgumentException` → `400`
+- `HttpMessageNotReadableException` → `400` (malformed JSON)
+- `MissingServletRequestParameterException` → `400`
+- `MethodArgumentTypeMismatchException` → `400`
+- `Exception` (catch-all) → `500`
 
 All return `ErrorResponse(code, message)`.
 
