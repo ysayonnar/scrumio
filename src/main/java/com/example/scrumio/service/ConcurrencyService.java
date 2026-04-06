@@ -14,7 +14,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class ConcurrencyService {
@@ -59,7 +58,8 @@ public class ConcurrencyService {
         long expected = (long) RACE_THREAD_COUNT * RACE_INCREMENTS_PER_THREAD;
 
         long[] unsafeCounter = {0};
-        AtomicLong safeCounter = new AtomicLong(0);
+        long[] safeCounter = {0};
+        Object lock = new Object();
 
         ExecutorService executor = new ThreadPoolExecutor(
                 RACE_THREAD_COUNT, RACE_THREAD_COUNT,
@@ -72,7 +72,9 @@ public class ConcurrencyService {
             executor.submit(() -> {
                 for (int j = 0; j < RACE_INCREMENTS_PER_THREAD; j++) {
                     unsafeCounter[0]++;
-                    safeCounter.incrementAndGet();
+                    synchronized (lock) {
+                        safeCounter[0]++;
+                    }
                 }
                 latch.countDown();
             });
@@ -84,7 +86,7 @@ public class ConcurrencyService {
             throw new IllegalStateException("Race condition threads did not finish within timeout");
         }
 
-        long safeResult = safeCounter.get();
+        long safeResult = safeCounter[0];
         long unsafeResult = unsafeCounter[0];
 
         return new RaceConditionResponse(
