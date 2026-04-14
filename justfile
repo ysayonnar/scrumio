@@ -27,11 +27,11 @@ demo-counter:
 front:
     cd frontend && npm install && npm run dev
 
-test-async:
+test-rps:
     rm -f jmeter/results.jtl
     rm -rf jmeter/report
     jmeter -n \
     -j logs/jmeter.log \
-    -t jmeter/concurrency-load-test.jmx \
+    -t jmeter/business-load-test.jmx \
     -l jmeter/results.jtl \
     -e -o jmeter/report
