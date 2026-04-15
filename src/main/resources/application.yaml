@@ -15,12 +15,26 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migrations
+
   application:
     name: scrumio
 
 logging:
   level:
     org.hibernate.orm.jdbc.bind: TRACE
+    org.flywaydb: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 auth-service:
   url: ${AUTH_SERVICE_URL}

@@ -7,6 +7,9 @@ services:
     restart: always
     ports:
       - "${FRONTEND_PORT}:80"
+    environment:
+      BACKEND_URL: ${BACKEND_URL}
+      AUTH_SERVICE_URL: ${FRONTEND_AUTH_SERVICE_URL}
     depends_on:
       backend:
         condition: service_healthy
@@ -29,7 +32,7 @@ services:
       auth-service:
         condition: service_started
     healthcheck:
-      test: [ "CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080' || exit 1" ]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
