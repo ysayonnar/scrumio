@@ -14,6 +14,15 @@ const SPRINT_STATUSES: SprintStatus[] = ['PLANNED', 'ACTIVE', 'COMPLETED']
 const ESTIMATION_TYPES: SprintEstimationType[] = ['STORY_POINTS', 'HOURS']
 const MEMBER_ROLES: ProjectMemberRole[] = ['OWNER', 'MANAGER', 'DEVELOPER', 'STAKEHOLDER']
 
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="lbl">{label}</label>
+      {children}
+    </div>
+  )
+}
+
 function CreateSprintModal({ projectId, onClose }: { projectId: string; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<SprintPayload>({
@@ -22,6 +31,7 @@ function CreateSprintModal({ projectId, onClose }: { projectId: string; onClose:
     estimationType: 'STORY_POINTS', projectId,
   })
   const [error, setError] = useState('')
+  const set = (k: keyof SprintPayload, v: string) => setForm((f) => ({ ...f, [k]: v }))
 
   const mutation = useMutation({
     mutationFn: createSprint,
@@ -29,62 +39,51 @@ function CreateSprintModal({ projectId, onClose }: { projectId: string; onClose:
     onError: (err) => setError(getApiError(err, 'Failed to create sprint')),
   })
 
-  const set = (field: keyof SprintPayload, value: string) => setForm((f) => ({ ...f, [field]: value }))
-
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault(); setError('')
     if (!form.name.trim()) { setError('Name is required'); return }
-    if (!form.startDate) { setError('Start date is required'); return }
-    if (!form.endDate) { setError('End date is required'); return }
-    if (form.startDate >= form.endDate) { setError('Start date must be before end date'); return }
+    if (!form.startDate || !form.endDate) { setError('Dates are required'); return }
+    if (form.startDate >= form.endDate) { setError('Start must be before end'); return }
     mutation.mutate(form)
   }
 
   return (
     <Modal title="New Sprint" onClose={onClose}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {error && <div className="err-box">{error}</div>}
-        <div>
-          <label className="lbl">Name *</label>
-          <input required value={form.name} onChange={(e) => set('name', e.target.value)} className="field" />
-        </div>
-        <div>
-          <label className="lbl">Business Goal</label>
-          <textarea value={form.businessGoal} onChange={(e) => set('businessGoal', e.target.value)} rows={2} className="field" />
-        </div>
-        <div>
-          <label className="lbl">Dev Plan</label>
-          <textarea value={form.devPlan} onChange={(e) => set('devPlan', e.target.value)} rows={2} className="field" />
-        </div>
+        <FormField label="Name *">
+          <input required value={form.name} onChange={(e) => set('name', e.target.value)} className="field" placeholder="Sprint 1" />
+        </FormField>
+        <FormField label="Business goal">
+          <textarea value={form.businessGoal} onChange={(e) => set('businessGoal', e.target.value)} rows={2} className="field" placeholder="What do we want to achieve?" />
+        </FormField>
+        <FormField label="Dev plan">
+          <textarea value={form.devPlan} onChange={(e) => set('devPlan', e.target.value)} rows={2} className="field" placeholder="How will we achieve it?" />
+        </FormField>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div>
-            <label className="lbl">Start Date *</label>
+          <FormField label="Start date *">
             <input required type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} className="field" />
-          </div>
-          <div>
-            <label className="lbl">End Date *</label>
+          </FormField>
+          <FormField label="End date *">
             <input required type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)} className="field" />
-          </div>
+          </FormField>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div>
-            <label className="lbl">Status</label>
+          <FormField label="Status">
             <select value={form.status} onChange={(e) => set('status', e.target.value)} className="field">
               {SPRINT_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
-          </div>
-          <div>
-            <label className="lbl">Estimation</label>
+          </FormField>
+          <FormField label="Estimation">
             <select value={form.estimationType} onChange={(e) => set('estimationType', e.target.value)} className="field">
               {ESTIMATION_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
-          </div>
+          </FormField>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '4px' }}>
           <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
           <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
-            {mutation.isPending ? 'creating...' : '+ Create'}
+            {mutation.isPending ? 'Creating…' : 'Create sprint'}
           </button>
         </div>
       </form>
@@ -101,27 +100,25 @@ function AddMemberModal({ projectId, onClose }: { projectId: string; onClose: ()
   const mutation = useMutation({
     mutationFn: () => addProjectMember(projectId, { userId, role }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members', projectId] }); onClose() },
-    onError: (err) => setError(getApiError(err, 'Failed to add member. Check the user ID.')),
+    onError: (err) => setError(getApiError(err, 'Failed to add member')),
   })
 
   return (
     <Modal title="Add Member" onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); setError(''); mutation.mutate() }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <form onSubmit={(e) => { e.preventDefault(); setError(''); mutation.mutate() }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {error && <div className="err-box">{error}</div>}
-        <div>
-          <label className="lbl">User ID *</label>
-          <input required value={userId} onChange={(e) => setUserId(e.target.value)} className="field" placeholder="UUID of the user" />
-        </div>
-        <div>
-          <label className="lbl">Role</label>
+        <FormField label="User ID *">
+          <input required value={userId} onChange={(e) => setUserId(e.target.value)} className="field" placeholder="Paste user UUID" />
+        </FormField>
+        <FormField label="Role">
           <select value={role} onChange={(e) => setRole(e.target.value as ProjectMemberRole)} className="field">
             {MEMBER_ROLES.map((r) => <option key={r}>{r}</option>)}
           </select>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+        </FormField>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '4px' }}>
           <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
           <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
-            {mutation.isPending ? 'adding...' : '+ Add Member'}
+            {mutation.isPending ? 'Adding…' : 'Add member'}
           </button>
         </div>
       </form>
@@ -143,19 +140,17 @@ function EditProjectModal({ projectId, initialName, initialDesc, onClose }: {
 
   return (
     <Modal title="Edit Project" onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate() }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div>
-          <label className="lbl">Name</label>
+      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate() }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <FormField label="Name">
           <input value={name} onChange={(e) => setName(e.target.value)} className="field" />
-        </div>
-        <div>
-          <label className="lbl">Description</label>
+        </FormField>
+        <FormField label="Description">
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="field" />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+        </FormField>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '4px' }}>
           <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
           <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
-            {mutation.isPending ? 'saving...' : 'Save'}
+            {mutation.isPending ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </form>
@@ -171,15 +166,9 @@ export function ProjectDetailPage() {
   const [showAddMember, setShowAddMember] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
 
-  const { data: project, isLoading: projectLoading } = useQuery({
-    queryKey: ['project', id], queryFn: () => getProject(id!), enabled: !!id,
-  })
-  const { data: sprints } = useQuery({
-    queryKey: ['sprints', id], queryFn: () => getSprints(id!), enabled: !!id,
-  })
-  const { data: members } = useQuery({
-    queryKey: ['members', id], queryFn: () => getProjectMembers(id!), enabled: !!id,
-  })
+  const { data: project, isLoading } = useQuery({ queryKey: ['project', id], queryFn: () => getProject(id!), enabled: !!id })
+  const { data: sprints } = useQuery({ queryKey: ['sprints', id], queryFn: () => getSprints(id!), enabled: !!id })
+  const { data: members } = useQuery({ queryKey: ['members', id], queryFn: () => getProjectMembers(id!), enabled: !!id })
 
   const deleteSprintMutation = useMutation({
     mutationFn: deleteSprint,
@@ -195,58 +184,48 @@ export function ProjectDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members', id] }),
   })
 
-  if (projectLoading) {
-    return (
-      <Layout>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--tx3)', fontSize: '12px', letterSpacing: '0.06em' }}>
-          loading<span className="cursor-blink">_</span>
-        </div>
-      </Layout>
-    )
-  }
+  if (isLoading) return (
+    <Layout>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--tx3)', fontSize: '14px' }}>
+        Loading…
+      </div>
+    </Layout>
+  )
 
-  if (!project) {
-    return (
-      <Layout>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-          <div className="err-box">Project not found</div>
-        </div>
-      </Layout>
-    )
-  }
+  if (!project) return (
+    <Layout>
+      <div style={{ padding: '32px' }}><div className="err-box">Project not found</div></div>
+    </Layout>
+  )
 
   return (
     <Layout>
-      <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--bd)', background: 'rgba(20,20,31,0.97)' }}>
-        <button className="back" onClick={() => navigate('/projects')} style={{ marginBottom: '10px' }}>
-          ← Projects
+      {/* Header */}
+      <div style={{ background: '#fff', borderBottom: '1px solid var(--bd)', padding: '24px 32px' }}>
+        <button className="back" onClick={() => navigate('/projects')} style={{ marginBottom: '12px' }}>
+          ← All projects
         </button>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#eaeaf8', letterSpacing: '-0.01em' }}>
+            <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '24px', color: 'var(--tx)', letterSpacing: '-0.02em', marginBottom: '4px' }}>
               {project.name}
             </h1>
             {project.description && (
-              <div style={{ color: 'var(--tx2)', fontSize: '12px', marginTop: '4px' }}>
-                {project.description}
-              </div>
+              <p style={{ color: 'var(--tx2)', fontSize: '14px' }}>{project.description}</p>
             )}
-            <div style={{ color: 'var(--tx3)', fontSize: '10px', marginTop: '6px', letterSpacing: '0.04em' }}>
-              ID: {project.id}
-            </div>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <Link to={`/projects/${id}/board`} className="btn btn-outline">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-                <rect x="1" y="2" width="2" height="8" rx="0.5" />
-                <rect x="5" y="2" width="2" height="8" rx="0.5" />
-                <rect x="9" y="2" width="2" height="8" rx="0.5" />
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <rect x="1" y="2" width="2.5" height="10" rx="1"/>
+                <rect x="5.75" y="2" width="2.5" height="10" rx="1"/>
+                <rect x="10.5" y="2" width="2.5" height="10" rx="1"/>
               </svg>
               Board
             </Link>
             <button onClick={() => setShowEdit(true)} className="btn btn-outline">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8.5 1.5l2 2L4 10 1.5 10.5 2 8 8.5 1.5z" />
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9.5 2l2.5 2.5L5 11.5H2.5V9L9.5 2z"/>
               </svg>
               Edit
             </button>
@@ -254,53 +233,55 @@ export function ProjectDetailPage() {
         </div>
       </div>
 
-      <div style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 280px', gap: '32px', alignItems: 'start' }}>
+      {/* Body */}
+      <div style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '28px', alignItems: 'start' }}>
 
+        {/* Sprints */}
         <section>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <div className="sh">
-              sprints
-              <span style={{ color: 'var(--tx3)', fontSize: '10px' }}>
-                [{sprints?.length ?? 0}]
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: 'var(--tx)' }}>Sprints</h2>
+              <span style={{ background: 'var(--surf2)', border: '1px solid var(--bd)', borderRadius: '99px', padding: '1px 9px', fontSize: '12px', color: 'var(--tx2)' }}>
+                {sprints?.length ?? 0}
               </span>
             </div>
-            <button onClick={() => setShowCreateSprint(true)} className="btn btn-link" style={{ fontSize: '11px' }}>
-              + new sprint
+            <button onClick={() => setShowCreateSprint(true)} className="btn btn-primary" style={{ padding: '7px 14px', fontSize: '13px' }}>
+              + New sprint
             </button>
           </div>
 
           {sprints && sprints.length === 0 ? (
-            <div style={{ color: 'var(--tx3)', fontSize: '12px', padding: '16px 0' }}>
-              No sprints yet.
+            <div style={{ background: '#fff', border: '1px solid var(--bd)', borderRadius: '12px', padding: '40px', textAlign: 'center' }}>
+              <p style={{ color: 'var(--tx3)', fontSize: '14px' }}>No sprints yet — create your first one.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {sprints?.map((sprint) => (
-                <div key={sprint.id} className="card" style={{ padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+                <div key={sprint.id} className="card-flat" style={{ padding: '16px 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                     <Link
                       to={`/projects/${id}/sprints/${sprint.id}`}
-                      style={{ color: '#e4e4f4', fontSize: '13px', fontWeight: '500', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      style={{ fontFamily: 'Syne, sans-serif', fontWeight: 600, fontSize: '15px', color: 'var(--tx)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', transition: 'color 0.15s' }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--ac)' }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#e4e4f4' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--tx)' }}
                     >
                       {sprint.name}
                     </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                       <Badge label={sprint.status} variant={sprintStatusVariant(sprint.status)} />
-                      <button onClick={() => deleteSprintMutation.mutate(sprint.id)} className="btn-ghost" style={{ padding: '3px' }}>
-                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
-                          <path d="M1 2.5h9M4 1h3M2.5 2.5l.5 7h5l.5-7" />
+                      <button onClick={() => deleteSprintMutation.mutate(sprint.id)} className="btn-ghost">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                          <path d="M1 3h11M4.5 1.5h4M2.5 3l.7 8h6.6l.7-8"/>
                         </svg>
                       </button>
                     </div>
                   </div>
                   {sprint.businessGoal && (
-                    <div style={{ color: 'var(--tx2)', fontSize: '11px', marginTop: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ color: 'var(--tx2)', fontSize: '13px', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {sprint.businessGoal}
-                    </div>
+                    </p>
                   )}
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '8px', color: 'var(--tx3)', fontSize: '11px', letterSpacing: '0.03em' }}>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '10px', color: 'var(--tx3)', fontSize: '12px' }}>
                     <span>{sprint.startDate} → {sprint.endDate}</span>
                     <span>{sprint.estimationType.replace('_', ' ')}</span>
                   </div>
@@ -310,69 +291,65 @@ export function ProjectDetailPage() {
           )}
         </section>
 
+        {/* Members */}
         <aside>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <div className="sh">
-              members
-              <span style={{ color: 'var(--tx3)', fontSize: '10px' }}>
-                [{members?.length ?? 0}]
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '16px', color: 'var(--tx)' }}>Members</h2>
+              <span style={{ background: 'var(--surf2)', border: '1px solid var(--bd)', borderRadius: '99px', padding: '1px 9px', fontSize: '12px', color: 'var(--tx2)' }}>
+                {members?.length ?? 0}
               </span>
             </div>
-            <button onClick={() => setShowAddMember(true)} className="btn btn-link" style={{ fontSize: '11px' }}>
-              + add
-            </button>
+            <button onClick={() => setShowAddMember(true)} className="btn-link">+ Add</button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {members?.map((member) => (
-              <div key={member.id} className="card" style={{ padding: '10px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ color: '#e4e4f4', fontSize: '12px', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {member.userName}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {members?.map((m) => (
+              <div key={m.id} className="card-flat" style={{ padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: 'var(--ac-l)', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '13px', color: 'var(--ac)' }}>
+                      {m.userName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 500, fontSize: '13px', color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {m.userName}
                     </div>
-                    <div style={{ color: 'var(--tx3)', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
-                      {member.userId.slice(0, 8)}...
-                    </div>
+                    <Badge label={m.role} variant={memberRoleVariant(m.role)} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                     <select
-                      value={member.role}
-                      onChange={(e) => updateRoleMutation.mutate({ memberId: member.id, role: e.target.value as ProjectMemberRole })}
+                      value={m.role}
+                      onChange={(e) => updateRoleMutation.mutate({ memberId: m.id, role: e.target.value as ProjectMemberRole })}
                       className="field-sm"
                     >
                       {MEMBER_ROLES.map((r) => <option key={r}>{r}</option>)}
                     </select>
-                    <button onClick={() => removeMemberMutation.mutate(member.id)} className="btn-ghost" style={{ padding: '3px' }}>
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-                        <path d="M1 1l8 8M9 1L1 9" />
+                    <button onClick={() => removeMemberMutation.mutate(m.id)} className="btn-ghost" style={{ padding: '4px' }}>
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                        <path d="M1 1l9 9M10 1L1 10"/>
                       </svg>
                     </button>
                   </div>
                 </div>
-                <div style={{ marginTop: '7px' }}>
-                  <Badge label={member.role} variant={memberRoleVariant(member.role)} />
-                </div>
               </div>
             ))}
             {members && members.length === 0 && (
-              <div style={{ color: 'var(--tx3)', fontSize: '12px', padding: '8px 0' }}>
-                No members yet.
-              </div>
+              <p style={{ color: 'var(--tx3)', fontSize: '13px', padding: '4px 0' }}>No members yet.</p>
             )}
           </div>
         </aside>
       </div>
 
       {showCreateSprint && <CreateSprintModal projectId={id!} onClose={() => setShowCreateSprint(false)} />}
-      {showAddMember && <AddMemberModal projectId={id!} onClose={() => setShowAddMember(false)} />}
+      {showAddMember   && <AddMemberModal    projectId={id!} onClose={() => setShowAddMember(false)} />}
       {showEdit && project && (
-        <EditProjectModal
-          projectId={id!}
-          initialName={project.name}
-          initialDesc={project.description}
-          onClose={() => setShowEdit(false)}
-        />
+        <EditProjectModal projectId={id!} initialName={project.name} initialDesc={project.description} onClose={() => setShowEdit(false)} />
       )}
     </Layout>
   )

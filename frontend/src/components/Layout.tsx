@@ -20,69 +20,82 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* Sidebar */}
       <aside style={{
-        width: '216px',
+        width: '240px',
         flexShrink: 0,
-        background: '#181828',
+        background: '#fff',
         borderRight: '1px solid var(--bd)',
         display: 'flex',
         flexDirection: 'column',
         overflowY: 'auto',
       }}>
-        <div style={{ padding: '18px 14px 14px', borderBottom: '1px solid var(--bd)' }}>
+        {/* Logo */}
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--bd)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '30px', height: '30px',
+              width: '34px', height: '34px',
               background: 'var(--ac)',
-              borderRadius: '2px',
+              borderRadius: '8px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(232,69,10,0.3)',
             }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect x="2" y="2" width="5" height="5" fill="#060608" />
-                <rect x="9" y="2" width="5" height="5" fill="#060608" />
-                <rect x="2" y="9" width="5" height="5" fill="#060608" />
-                <rect x="9" y="9" width="5" height="2" fill="#060608" />
-                <rect x="12" y="12" width="2" height="2" fill="#060608" />
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <rect x="2" y="2" width="6" height="6" rx="1" fill="white"/>
+                <rect x="10" y="2" width="6" height="6" rx="1" fill="white" opacity="0.7"/>
+                <rect x="2" y="10" width="6" height="6" rx="1" fill="white" opacity="0.7"/>
+                <rect x="10" y="10" width="3" height="6" rx="1" fill="white" opacity="0.4"/>
+                <rect x="13" y="13" width="3" height="3" rx="0.5" fill="white" opacity="0.4"/>
               </svg>
             </div>
             <div>
-              <div style={{ color: '#eaeaf8', fontSize: '13px', fontWeight: '700', letterSpacing: '0.06em' }}>
-                SCRUMIO
+              <div style={{
+                fontFamily: 'Syne, sans-serif',
+                fontWeight: 800,
+                fontSize: '16px',
+                color: 'var(--tx)',
+                letterSpacing: '-0.01em',
+              }}>
+                Scrumio
               </div>
-              <div style={{ color: 'var(--tx3)', fontSize: '10px', letterSpacing: '0.1em' }}>
+              <div style={{ fontSize: '11px', color: 'var(--tx3)', marginTop: '-1px' }}>
                 workspace
               </div>
             </div>
           </div>
         </div>
 
-        <nav style={{ flex: 1, padding: '10px 8px' }}>
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '12px 10px' }}>
           <div style={{
-            color: 'var(--tx3)', fontSize: '10px',
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-            padding: '4px 10px 8px',
+            fontSize: '11px', fontWeight: 600, color: 'var(--tx3)',
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            padding: '4px 12px 8px',
           }}>
-            navigate
+            Main
           </div>
+
           <Link to="/projects" className={`nav-item ${isActive ? 'active' : ''}`}>
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 4.5a1 1 0 011-1h2.5L6 2h7a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1V4.5z" />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1.5 5a1 1 0 011-1h3l1.5-1.5H14a1 1 0 011 1v8a1 1 0 01-1 1H2.5a1 1 0 01-1-1V5z"/>
             </svg>
             Projects
           </Link>
         </nav>
 
-        <div style={{ padding: '8px', borderTop: '1px solid var(--bd)' }}>
-          <button onClick={handleLogout} className="nav-item">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9.5 10l3-3-3-3M12.5 7H5.5M5.5 12.5H2a.5.5 0 01-.5-.5V2A.5.5 0 012 1.5h3.5" />
+        {/* Bottom */}
+        <div style={{ padding: '10px', borderTop: '1px solid var(--bd)' }}>
+          <button onClick={handleLogout} className="nav-item" style={{ width: '100%' }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 10.5l3-3-3-3M14 7.5H6.5M6.5 13H3a.5.5 0 01-.5-.5v-10A.5.5 0 013 2h3.5"/>
             </svg>
             Sign out
           </button>
         </div>
       </aside>
 
+      {/* Content */}
       <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
         {children}
       </main>

@@ -13,137 +13,101 @@ export function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
-    }
+    if (password.length < 8) { setError('Password must be at least 8 characters'); return }
     setLoading(true)
     try {
       await register(email, password)
       navigate('/login')
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
-      if (status === 409) {
-        setError('Email already registered')
-      } else {
-        setError('Registration failed. Try again.')
-      }
+      setError(status === 409 ? 'Email already registered' : 'Registration failed. Try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#14141f',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      backgroundImage: `
-        radial-gradient(ellipse at 85% 50%, rgba(200,255,74,0.04) 0%, transparent 55%),
-        linear-gradient(rgba(200,255,74,0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(200,255,74,0.018) 1px, transparent 1px)
-      `,
-      backgroundSize: 'auto, 40px 40px, 40px 40px',
-    }}>
-      <div style={{ width: '100%', maxWidth: '340px', animation: 'slideUp 0.4s ease forwards' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif" }}>
 
-        <div style={{ marginBottom: '28px', textAlign: 'center' }}>
-          <div style={{
-            display: 'inline-flex',
-            width: '44px', height: '44px',
-            background: 'var(--ac)',
-            alignItems: 'center', justifyContent: 'center',
-            borderRadius: '2px',
-            marginBottom: '14px',
-          }}>
-            <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="5" height="5" fill="#060608" />
-              <rect x="9" y="2" width="5" height="5" fill="#060608" />
-              <rect x="2" y="9" width="5" height="5" fill="#060608" />
-              <rect x="9" y="9" width="5" height="2" fill="#060608" />
-              <rect x="12" y="12" width="2" height="2" fill="#060608" />
-            </svg>
-          </div>
-          <div style={{ color: '#eaeaf8', fontSize: '20px', fontWeight: '700', letterSpacing: '0.08em' }}>
-            SCRUMIO
-            <span className="cursor-blink" style={{ color: 'var(--ac)', marginLeft: '2px' }}>_</span>
-          </div>
-          <div style={{ color: 'var(--tx3)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '3px' }}>
-            create account
-          </div>
-        </div>
-
+      {/* ── Left: Brand panel ── */}
+      <div style={{
+        width: '44%',
+        background: 'var(--tx)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '48px',
+        position: 'relative',
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}>
         <div style={{
-          background: '#1c1c2c',
-          border: '1px solid #2e2e48',
-          borderRadius: '2px',
-          padding: '24px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            marginBottom: '20px',
-            paddingBottom: '14px',
-            borderBottom: '1px solid #2e2e48',
-          }}>
-            <span style={{ color: 'var(--ac)', fontSize: '11px', fontWeight: '600' }}>//</span>
-            <span style={{ color: 'var(--tx2)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              register
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: `radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)`,
+          backgroundSize: '28px 28px',
+        }}/>
+        <div style={{ position: 'absolute', bottom: '-60px', right: '-60px', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(232,69,10,0.12)', pointerEvents: 'none' }}/>
+
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '60px' }}>
+            <div style={{ width: '36px', height: '36px', background: 'var(--ac)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+                <rect x="2" y="2" width="6" height="6" rx="1" fill="white"/>
+                <rect x="10" y="2" width="6" height="6" rx="1" fill="white" opacity="0.7"/>
+                <rect x="2" y="10" width="6" height="6" rx="1" fill="white" opacity="0.7"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-0.01em' }}>
+              Scrumio
             </span>
           </div>
 
-          <div className="info-box" style={{ marginBottom: '16px' }}>
-            Display name auto-generated. Update it after login.
+          <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '44px', color: '#fff', lineHeight: 1.08, letterSpacing: '-0.03em', marginBottom: '20px' }}>
+            Join your<br/>team today.
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '15px', lineHeight: 1.7, maxWidth: '270px' }}>
+            Create an account and start collaborating on sprints, tickets, and releases.
+          </p>
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--ac)' }}/>
+            Your display name is auto-generated and can be changed after sign-up.
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right: Form panel ── */}
+      <div style={{ flex: 1, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
+        <div style={{ width: '100%', maxWidth: '360px', animation: 'slideUp 0.35s ease forwards' }}>
+
+          <div style={{ marginBottom: '36px' }}>
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '28px', color: 'var(--tx)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+              Create account
+            </h2>
+            <p style={{ color: 'var(--tx2)', fontSize: '14px' }}>Free forever. No credit card needed.</p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && <div className="err-box">{error}</div>}
-
             <div>
-              <label className="lbl">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="field"
-                placeholder="user@domain.com"
-                autoComplete="email"
-              />
+              <label className="lbl">Email address</label>
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field" placeholder="you@example.com" autoComplete="email"/>
             </div>
-
             <div>
               <label className="lbl">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="field"
-                placeholder="min 8 characters"
-                autoComplete="new-password"
-              />
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="field" placeholder="Minimum 8 characters" autoComplete="new-password"/>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '4px', padding: '10px' }}
-            >
-              {loading ? 'creating...' : '→  create account'}
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', padding: '11px', fontSize: '15px', marginTop: '4px', borderRadius: '10px' }}>
+              {loading ? 'Creating account…' : 'Create account →'}
             </button>
           </form>
 
-          <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #2e2e48', textAlign: 'center' }}>
-            <span style={{ color: 'var(--tx3)', fontSize: '11px' }}>Have an account? </span>
-            <Link to="/login" style={{ color: 'var(--ac)', fontSize: '11px' }}>
-              Sign in →
-            </Link>
-          </div>
+          <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--tx2)' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: 'var(--ac)', fontWeight: 500 }}>Sign in</Link>
+          </p>
         </div>
       </div>
     </div>

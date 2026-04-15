@@ -10,21 +10,26 @@ import type { TicketStatus, TicketResponse, Page } from '../types'
 const STATUSES: TicketStatus[] = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'ON_HOLD', 'ON_REVIEW', 'DONE']
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
-  BACKLOG: 'Backlog',
-  TODO: 'To Do',
-  IN_PROGRESS: 'In Progress',
-  ON_HOLD: 'On Hold',
-  ON_REVIEW: 'On Review',
-  DONE: 'Done',
+  BACKLOG: 'Backlog', TODO: 'To Do', IN_PROGRESS: 'In Progress',
+  ON_HOLD: 'On Hold', ON_REVIEW: 'On Review', DONE: 'Done',
 }
 
-const STATUS_COUNT_COLORS: Record<TicketStatus, string> = {
-  BACKLOG: 'var(--tx3)',
-  TODO: 'rgba(96,184,255,0.7)',
-  IN_PROGRESS: 'rgba(255,200,64,0.7)',
-  ON_HOLD: 'rgba(255,107,107,0.7)',
-  ON_REVIEW: 'rgba(192,132,252,0.7)',
-  DONE: 'rgba(78,240,160,0.7)',
+const COL_BG: Record<TicketStatus, string> = {
+  BACKLOG:     '#f8f7f5',
+  TODO:        '#f0f4ff',
+  IN_PROGRESS: '#fffbeb',
+  ON_HOLD:     '#fff4f4',
+  ON_REVIEW:   '#f5f0ff',
+  DONE:        '#f0fdf6',
+}
+
+const COL_COUNT_COLOR: Record<TicketStatus, string> = {
+  BACKLOG:     '#94a3b8',
+  TODO:        '#2563eb',
+  IN_PROGRESS: '#b45309',
+  ON_HOLD:     '#dc2626',
+  ON_REVIEW:   '#7c3aed',
+  DONE:        '#16a34a',
 }
 
 function TicketCard({
@@ -41,37 +46,35 @@ function TicketCard({
       onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart(ticket.id) }}
       className={`k-card pri-${ticket.priority}${isDragging ? ' dragging' : ''}`}
     >
-      <Link to={`/tickets/${ticket.id}`} draggable={false} style={{ display: 'block', marginBottom: '8px' }}>
-        <div style={{
-          color: '#e4e4f4',
-          fontSize: '12px',
-          fontWeight: '500',
-          lineHeight: '1.4',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
+      <Link to={`/tickets/${ticket.id}`} draggable={false} style={{ display: 'block', marginBottom: '10px' }}>
+        <p style={{
+          color: 'var(--tx)', fontSize: '13px', fontWeight: 500, lineHeight: 1.45,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
         }}>
           {ticket.title}
-        </div>
+        </p>
       </Link>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
         <Badge label={ticket.priority} variant={ticketPriorityVariant(ticket.priority)} />
         {ticket.estimation !== null && (
-          <span style={{ color: 'var(--tx3)', fontSize: '10px', letterSpacing: '0.04em' }}>
-            {ticket.estimation}pt
+          <span style={{
+            fontSize: '11px', color: 'var(--tx3)',
+            background: 'var(--surf2)', border: '1px solid var(--bd)',
+            borderRadius: '99px', padding: '1px 7px',
+          }}>
+            {ticket.estimation} pts
           </span>
         )}
       </div>
 
       {ticket.sprintName && (
-        <div style={{ color: 'var(--tx3)', fontSize: '10px', marginTop: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ fontSize: '11px', color: 'var(--tx3)', marginTop: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {ticket.sprintName}
-        </div>
+        </p>
       )}
 
-      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--bd)' }}>
+      <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--bd)' }}>
         <select
           value={ticket.status}
           onClick={(e) => e.stopPropagation()}
@@ -94,11 +97,11 @@ function KanbanColumn({
   tickets: TicketResponse[]
   draggingId: string | null
   dragOverStatus: TicketStatus | null
-  onDragEnter: (status: TicketStatus) => void
+  onDragEnter: (s: TicketStatus) => void
   onDragLeave: () => void
-  onDrop: (status: TicketStatus) => void
+  onDrop: (s: TicketStatus) => void
   onDragStart: (id: string) => void
-  onStatusChange: (id: string, status: TicketStatus) => void
+  onStatusChange: (id: string, s: TicketStatus) => void
 }) {
   const isOver = dragOverStatus === status
 
@@ -106,14 +109,13 @@ function KanbanColumn({
     <div
       className={`col-${status}`}
       style={{
-        flexShrink: 0,
-        width: '240px',
-        background: isOver ? 'rgba(255,255,255,0.02)' : 'var(--bg-2)',
-        border: `1px solid ${isOver ? 'var(--bd-3)' : 'var(--bd)'}`,
-        borderRadius: '2px',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'border-color 0.12s, background 0.12s',
+        flexShrink: 0, width: '248px',
+        background: isOver ? '#fff' : COL_BG[status],
+        border: `1px solid ${isOver ? 'var(--ac)' : 'var(--bd)'}`,
+        borderRadius: '12px',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: isOver ? `0 0 0 3px var(--ac-l)` : 'none',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
       onDragEnter={() => onDragEnter(status)}
@@ -121,46 +123,41 @@ function KanbanColumn({
       onDrop={(e) => { e.preventDefault(); onDrop(status) }}
     >
       <div style={{
-        padding: '10px 12px',
+        padding: '12px 14px 10px',
         borderBottom: '1px solid var(--bd)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{ color: 'var(--tx2)', fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '12px', color: 'var(--tx2)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
           {STATUS_LABELS[status]}
         </span>
         <span style={{
-          color: STATUS_COUNT_COLORS[status],
-          fontSize: '10px',
-          fontWeight: '600',
-          letterSpacing: '0.04em',
-          background: 'var(--bg)',
-          border: '1px solid var(--bd)',
-          borderRadius: '2px',
-          padding: '1px 6px',
+          background: '#fff',
+          border: `1px solid var(--bd)`,
+          borderRadius: '99px',
+          padding: '2px 9px',
+          fontSize: '12px',
+          fontWeight: 600,
+          color: COL_COUNT_COLOR[status],
         }}>
           {tickets.length}
         </span>
       </div>
 
       <div style={{
-        padding: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-        flex: 1,
-        overflowY: 'auto',
-        maxHeight: 'calc(100vh - 180px)',
+        padding: '10px',
+        display: 'flex', flexDirection: 'column', gap: '8px',
+        flex: 1, overflowY: 'auto',
+        maxHeight: 'calc(100vh - 190px)',
       }}>
         {tickets.length === 0 && !isOver ? (
-          <div style={{ color: 'var(--tx3)', fontSize: '11px', textAlign: 'center', padding: '20px 0', letterSpacing: '0.06em' }}>
-            empty
-          </div>
+          <p style={{ color: 'var(--tx3)', fontSize: '12px', textAlign: 'center', padding: '20px 0' }}>
+            Drop tickets here
+          </p>
         ) : (
-          tickets.map((ticket) => (
+          tickets.map((t) => (
             <TicketCard
-              key={ticket.id}
-              ticket={ticket}
-              isDragging={draggingId === ticket.id}
+              key={t.id} ticket={t}
+              isDragging={draggingId === t.id}
               onDragStart={onDragStart}
               onStatusChange={onStatusChange}
             />
@@ -168,10 +165,10 @@ function KanbanColumn({
         )}
         {isOver && (
           <div style={{
-            height: '56px',
-            border: '1px dashed var(--bd-3)',
-            borderRadius: '2px',
-            opacity: 0.5,
+            height: '60px',
+            border: '2px dashed var(--ac)',
+            borderRadius: '8px',
+            background: 'var(--ac-l)',
           }} />
         )}
       </div>
@@ -195,106 +192,84 @@ export function BoardPage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ ticketId, status }: { ticketId: string; status: TicketStatus }) =>
-      updateTicket(ticketId, { status }),
+    mutationFn: ({ ticketId, status }: { ticketId: string; status: TicketStatus }) => updateTicket(ticketId, { status }),
     onError: () => queryClient.invalidateQueries({ queryKey: ['board-tickets', id] }),
   })
 
-  const handleDragStart = (ticketId: string) => {
-    draggingId.current = ticketId
-    setLocalDraggingId(ticketId)
-  }
-
   const handleDrop = (targetStatus: TicketStatus) => {
-    setDragOverStatus(null)
-    setLocalDraggingId(null)
+    setDragOverStatus(null); setLocalDraggingId(null)
     const ticketId = draggingId.current
     if (!ticketId) return
     draggingId.current = null
-    const currentTickets = ticketsPage?.content ?? []
-    const ticket = currentTickets.find((t) => t.id === ticketId)
+    const ticket = (ticketsPage?.content ?? []).find((t) => t.id === ticketId)
     if (!ticket || ticket.status === targetStatus) return
-    queryClient.setQueryData<Page<TicketResponse>>(['board-tickets', id], (old) => {
-      if (!old) return old
-      return { ...old, content: old.content.map((t) => t.id === ticketId ? { ...t, status: targetStatus } : t) }
-    })
+    queryClient.setQueryData<Page<TicketResponse>>(['board-tickets', id], (old) =>
+      old ? { ...old, content: old.content.map((t) => t.id === ticketId ? { ...t, status: targetStatus } : t) } : old
+    )
     updateMutation.mutate({ ticketId, status: targetStatus })
   }
 
   const handleStatusChange = (ticketId: string, status: TicketStatus) => {
-    queryClient.setQueryData<Page<TicketResponse>>(['board-tickets', id], (old) => {
-      if (!old) return old
-      return { ...old, content: old.content.map((t) => t.id === ticketId ? { ...t, status } : t) }
-    })
+    queryClient.setQueryData<Page<TicketResponse>>(['board-tickets', id], (old) =>
+      old ? { ...old, content: old.content.map((t) => t.id === ticketId ? { ...t, status } : t) } : old
+    )
     updateMutation.mutate({ ticketId, status })
   }
 
   const tickets = ticketsPage?.content ?? []
-  const byStatus = Object.fromEntries(
-    STATUSES.map((s) => [s, tickets.filter((t) => t.status === s)])
-  ) as Record<TicketStatus, TicketResponse[]>
+  const byStatus = Object.fromEntries(STATUSES.map((s) => [s, tickets.filter((t) => t.status === s)])) as Record<TicketStatus, TicketResponse[]>
 
-  if (projectLoading) {
-    return (
-      <Layout>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--tx3)', fontSize: '12px', letterSpacing: '0.06em' }}>
-          loading<span className="cursor-blink">_</span>
-        </div>
-      </Layout>
-    )
-  }
+  if (projectLoading) return (
+    <Layout>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--tx3)' }}>
+        Loading…
+      </div>
+    </Layout>
+  )
 
-  if (!project) {
-    return (
-      <Layout>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-          <div className="err-box">Project not found</div>
-        </div>
-      </Layout>
-    )
-  }
+  if (!project) return (
+    <Layout>
+      <div style={{ padding: '32px' }}><div className="err-box">Project not found</div></div>
+    </Layout>
+  )
 
   return (
     <Layout>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--bd)',
-          background: 'rgba(20,20,31,0.97)',
-          flexShrink: 0,
-        }}>
+        {/* Header */}
+        <div style={{ background: '#fff', borderBottom: '1px solid var(--bd)', padding: '18px 24px', flexShrink: 0 }}>
           <button className="back" onClick={() => navigate(`/projects/${id}`)} style={{ marginBottom: '8px' }}>
             ← {project.name}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div className="sh">board</div>
-              <div style={{ color: 'var(--tx3)', fontSize: '11px', marginTop: '2px', letterSpacing: '0.04em' }}>
-                {ticketsLoading ? 'loading tickets...' : `${tickets.length} tickets`}
-              </div>
+              <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '20px', color: 'var(--tx)', letterSpacing: '-0.02em' }}>
+                Board
+              </h1>
+              <p style={{ fontSize: '13px', color: 'var(--tx3)', marginTop: '1px' }}>
+                {ticketsLoading ? 'Loading…' : `${tickets.length} tickets`}
+              </p>
             </div>
-            <Link to={`/projects/${id}`} className="btn btn-outline" style={{ fontSize: '11px' }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-                <path d="M1 2h10M1 6h10M1 10h10" />
+            <Link to={`/projects/${id}`} className="btn btn-outline" style={{ fontSize: '13px' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M1 2.5h12M1 7h12M1 11.5h12"/>
               </svg>
-              List View
+              List view
             </Link>
           </div>
         </div>
 
+        {/* Board */}
         <div
           style={{ flex: 1, overflowX: 'auto', padding: '20px 24px' }}
           onDragEnd={() => { setLocalDraggingId(null); setDragOverStatus(null) }}
         >
-          <div style={{ display: 'flex', gap: '10px', height: '100%', minWidth: 'max-content' }}>
+          <div style={{ display: 'flex', gap: '12px', height: '100%', minWidth: 'max-content' }}>
             {STATUSES.map((status) => (
               <KanbanColumn
-                key={status}
-                status={status}
-                tickets={byStatus[status]}
-                draggingId={localDraggingId}
-                dragOverStatus={dragOverStatus}
-                onDragStart={handleDragStart}
+                key={status} status={status} tickets={byStatus[status]}
+                draggingId={localDraggingId} dragOverStatus={dragOverStatus}
+                onDragStart={(id) => { draggingId.current = id; setLocalDraggingId(id) }}
                 onDragEnter={setDragOverStatus}
                 onDragLeave={() => setDragOverStatus(null)}
                 onDrop={handleDrop}

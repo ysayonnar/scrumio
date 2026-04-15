@@ -18,86 +18,139 @@ export function LoginPage() {
       await login(email, password)
       navigate('/projects')
     } catch {
-      setError('Invalid credentials')
+      setError('Invalid email or password')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#14141f',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      backgroundImage: `
-        radial-gradient(ellipse at 15% 50%, rgba(200,255,74,0.04) 0%, transparent 55%),
-        linear-gradient(rgba(200,255,74,0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(200,255,74,0.018) 1px, transparent 1px)
-      `,
-      backgroundSize: 'auto, 40px 40px, 40px 40px',
-    }}>
-      <div style={{ width: '100%', maxWidth: '340px', animation: 'slideUp 0.4s ease forwards' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif" }}>
 
-        <div style={{ marginBottom: '28px', textAlign: 'center' }}>
-          <div style={{
-            display: 'inline-flex',
-            width: '44px', height: '44px',
-            background: 'var(--ac)',
-            alignItems: 'center', justifyContent: 'center',
-            borderRadius: '2px',
-            marginBottom: '14px',
-          }}>
-            <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="5" height="5" fill="#060608" />
-              <rect x="9" y="2" width="5" height="5" fill="#060608" />
-              <rect x="2" y="9" width="5" height="5" fill="#060608" />
-              <rect x="9" y="9" width="5" height="2" fill="#060608" />
-              <rect x="12" y="12" width="2" height="2" fill="#060608" />
-            </svg>
-          </div>
-          <div style={{ color: '#eaeaf8', fontSize: '20px', fontWeight: '700', letterSpacing: '0.08em' }}>
-            SCRUMIO
-            <span className="cursor-blink" style={{ color: 'var(--ac)', marginLeft: '2px' }}>_</span>
-          </div>
-          <div style={{ color: 'var(--tx3)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '3px' }}>
-            access terminal
-          </div>
-        </div>
-
+      {/* ── Left: Brand panel ── */}
+      <div style={{
+        width: '44%',
+        background: 'var(--ac)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '48px',
+        position: 'relative',
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}>
+        {/* Decorative grid */}
         <div style={{
-          background: '#1c1c2c',
-          border: '1px solid #2e2e48',
-          borderRadius: '2px',
-          padding: '24px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}>
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+        }}/>
+        {/* Large decorative circle */}
+        <div style={{
+          position: 'absolute',
+          bottom: '-80px', right: '-80px',
+          width: '360px', height: '360px',
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.07)',
+          pointerEvents: 'none',
+        }}/>
+        <div style={{
+          position: 'absolute',
+          top: '-40px', left: '-40px',
+          width: '200px', height: '200px',
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.06)',
+          pointerEvents: 'none',
+        }}/>
+
+        <div style={{ position: 'relative' }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            marginBottom: '20px',
-            paddingBottom: '14px',
-            borderBottom: '1px solid #2e2e48',
+            display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '60px',
           }}>
-            <span style={{ color: 'var(--ac)', fontSize: '11px', fontWeight: '600' }}>//</span>
-            <span style={{ color: 'var(--tx2)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              authenticate
+            <div style={{
+              width: '36px', height: '36px',
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+                <rect x="2" y="2" width="6" height="6" rx="1" fill="white"/>
+                <rect x="10" y="2" width="6" height="6" rx="1" fill="white" opacity="0.7"/>
+                <rect x="2" y="10" width="6" height="6" rx="1" fill="white" opacity="0.7"/>
+                <rect x="10" y="10" width="3" height="6" rx="1" fill="white" opacity="0.4"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-0.01em' }}>
+              Scrumio
             </span>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <h1 style={{
+            fontFamily: 'Syne, sans-serif',
+            fontWeight: 800,
+            fontSize: '48px',
+            color: '#fff',
+            lineHeight: 1.05,
+            letterSpacing: '-0.03em',
+            marginBottom: '20px',
+          }}>
+            Ship faster.<br/>Sprint smarter.
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '16px', lineHeight: 1.6, maxWidth: '280px' }}>
+            Your team's sprint command center — track work, run standups, and ship with confidence.
+          </p>
+        </div>
+
+        <div style={{ position: 'relative', display: 'flex', gap: '24px' }}>
+          {[['Sprints', 'Plan & track'], ['Tickets', 'Manage work'], ['Board', 'Visualize']].map(([title, sub]) => (
+            <div key={title}>
+              <div style={{ color: '#fff', fontWeight: 600, fontSize: '14px' }}>{title}</div>
+              <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', marginTop: '2px' }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Right: Form panel ── */}
+      <div style={{
+        flex: 1,
+        background: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px',
+      }}>
+        <div style={{ width: '100%', maxWidth: '360px', animation: 'slideUp 0.35s ease forwards' }}>
+
+          <div style={{ marginBottom: '36px' }}>
+            <h2 style={{
+              fontFamily: 'Syne, sans-serif',
+              fontWeight: 800,
+              fontSize: '28px',
+              color: 'var(--tx)',
+              letterSpacing: '-0.02em',
+              marginBottom: '8px',
+            }}>
+              Welcome back
+            </h2>
+            <p style={{ color: 'var(--tx2)', fontSize: '14px' }}>
+              Sign in to your workspace
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && <div className="err-box">{error}</div>}
 
             <div>
-              <label className="lbl">Email</label>
+              <label className="lbl">Email address</label>
               <input
-                type="email"
-                required
-                value={email}
+                type="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="field"
-                placeholder="user@domain.com"
+                placeholder="you@example.com"
                 autoComplete="email"
               />
             </div>
@@ -105,9 +158,7 @@ export function LoginPage() {
             <div>
               <label className="lbl">Password</label>
               <input
-                type="password"
-                required
-                value={password}
+                type="password" required value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="field"
                 placeholder="••••••••••"
@@ -116,25 +167,20 @@ export function LoginPage() {
             </div>
 
             <button
-              type="submit"
-              disabled={loading}
+              type="submit" disabled={loading}
               className="btn btn-primary"
-              style={{ width: '100%', marginTop: '4px', padding: '10px' }}
+              style={{ width: '100%', padding: '11px', fontSize: '15px', marginTop: '4px', borderRadius: '10px' }}
             >
-              {loading ? 'connecting...' : '→  sign in'}
+              {loading ? 'Signing in…' : 'Sign in →'}
             </button>
           </form>
 
-          <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #2e2e48', textAlign: 'center' }}>
-            <span style={{ color: 'var(--tx3)', fontSize: '11px' }}>No account? </span>
-            <Link to="/register" style={{ color: 'var(--ac)', fontSize: '11px' }}>
-              Register →
+          <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--tx2)' }}>
+            Don't have an account?{' '}
+            <Link to="/register" style={{ color: 'var(--ac)', fontWeight: 500 }}>
+              Create one
             </Link>
-          </div>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '18px', color: 'var(--tx3)', fontSize: '10px', letterSpacing: '0.06em' }}>
-          SCRUMIO © 2026 — all rights reserved
+          </p>
         </div>
       </div>
     </div>
