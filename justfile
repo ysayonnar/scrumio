@@ -1,13 +1,14 @@
 COMPOSE_FILE := "./infrastructure/docker-compose.yaml"
+ENV_FILE := "./.env"
 
 run:
-    export $(grep -v '^#' .env | xargs) && ./gradlew bootRun
+    export $(grep -v '^#' .env | xargs) && export DB_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}" && ./gradlew bootRun
 
 up:
-    docker compose -f {{ COMPOSE_FILE }} up -d --build
+    docker compose -f {{ COMPOSE_FILE }} --env-file {{ ENV_FILE }} up -d --build
 
 down:
-    docker compose -f {{ COMPOSE_FILE }} down
+    docker compose -f {{ COMPOSE_FILE }} --env-file {{ ENV_FILE }} down
 
 apply-migrations:
     ./gradlew flywayMigrate

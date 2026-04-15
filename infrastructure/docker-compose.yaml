@@ -1,12 +1,45 @@
 version: '3.8'
 
 services:
-  
+
+  frontend:
+    build: ../frontend/
+    restart: always
+    ports:
+      - "${FRONTEND_PORT}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+  backend:
+    build: ../
+    restart: always
+    ports:
+      - "${BACKEND_PORT}:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:${DB_PORT}/${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      AUTH_SERVICE_URL: http://auth-service:80
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   auth-service:
     build: ../go-auth-service/
     restart: always
     ports:
-      - "3000:80"
+      - "${AUTH_SERVICE_PORT}:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -18,13 +51,13 @@ services:
     container_name: scrumio-postgres
     restart: always
     environment:
-      POSTGRES_DB: scrumio_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d scrumio_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
       interval: 3s
       timeout: 3s
       retries: 3
@@ -36,7 +69,7 @@ services:
     restart: always
     container_name: scrumio-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
