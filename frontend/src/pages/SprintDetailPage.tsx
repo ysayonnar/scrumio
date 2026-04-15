@@ -19,68 +19,53 @@ const MEETING_TYPES: MeetingType[] = ['PLANNING', 'DAILY', 'REVIEW', 'RETROSPECT
 function CreateTicketModal({ sprintId, projectId, onClose }: { sprintId: string; projectId: string; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<TicketPayload>({
-    title: '',
-    description: '',
-    priority: 'MEDIUM',
-    status: 'BACKLOG',
-    estimation: null,
-    sprintId,
-    projectId,
+    title: '', description: '', priority: 'MEDIUM', status: 'BACKLOG', estimation: null, sprintId, projectId,
   })
   const [error, setError] = useState('')
 
   const mutation = useMutation({
     mutationFn: createTicket,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tickets'] })
-      onClose()
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['tickets'] }); onClose() },
     onError: (err) => setError(getApiError(err, 'Failed to create ticket')),
   })
 
   return (
     <Modal title="New Ticket" onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(form) }} className="space-y-4">
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{error}</div>}
+      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(form) }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {error && <div className="err-box">{error}</div>}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-          <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="lbl">Title *</label>
+          <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="field" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          <label className="lbl">Description</label>
+          <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} className="field" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-            <select value={form.priority} onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as TicketPriority }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <label className="lbl">Priority</label>
+            <select value={form.priority} onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as TicketPriority }))} className="field">
               {TICKET_PRIORITIES.map((p) => <option key={p}>{p}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as TicketStatus }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <label className="lbl">Status</label>
+            <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as TicketStatus }))} className="field">
               {TICKET_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Estimation</label>
+          <label className="lbl">Estimation</label>
           <input type="number" min={0}
             value={form.estimation ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, estimation: e.target.value ? Number(e.target.value) : null }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Story points / hours" />
+            className="field" placeholder="pts / hours" />
         </div>
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700">Cancel</button>
-          <button type="submit" disabled={mutation.isPending}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60">
-            {mutation.isPending ? 'Creating…' : 'Create'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+          <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+          <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+            {mutation.isPending ? 'creating...' : '+ Create'}
           </button>
         </div>
       </form>
@@ -90,27 +75,17 @@ function CreateTicketModal({ sprintId, projectId, onClose }: { sprintId: string;
 
 function CreateMeetingModal({ sprintId, projectId, onClose }: { sprintId: string; projectId: string; onClose: () => void }) {
   const queryClient = useQueryClient()
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    type: 'PLANNING' as MeetingType,
-    startsAt: '',
-    endsAt: '',
-  })
+  const [form, setForm] = useState({ title: '', description: '', type: 'PLANNING' as MeetingType, startsAt: '', endsAt: '' })
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([])
   const [error, setError] = useState('')
 
   const { data: members } = useQuery({
-    queryKey: ['members', projectId],
-    queryFn: () => getProjectMembers(projectId),
+    queryKey: ['members', projectId], queryFn: () => getProjectMembers(projectId),
   })
 
   const mutation = useMutation({
     mutationFn: (data: MeetingWithMembersPayload) => createMeetingWithMembers(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meetings', projectId] })
-      onClose()
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['meetings', projectId] }); onClose() },
     onError: (err) => setError(getApiError(err, 'Failed to create meeting')),
   })
 
@@ -118,82 +93,82 @@ function CreateMeetingModal({ sprintId, projectId, onClose }: { sprintId: string
     e.preventDefault()
     setError('')
     mutation.mutate({
-      ...form,
-      sprintId,
-      projectId,
+      ...form, sprintId, projectId,
       startsAt: new Date(form.startsAt).toISOString(),
       endsAt: new Date(form.endsAt).toISOString(),
       memberIds: selectedMemberIds,
     })
   }
 
-  const toggleMember = (memberId: string) => {
-    setSelectedMemberIds((prev) =>
-      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]
-    )
-  }
+  const toggleMember = (memberId: string) =>
+    setSelectedMemberIds((prev) => prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId])
 
   return (
     <Modal title="New Meeting" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{error}</div>}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {error && <div className="err-box">{error}</div>}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-          <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="lbl">Title *</label>
+          <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="field" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as MeetingType }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <label className="lbl">Type</label>
+          <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as MeetingType }))} className="field">
             {MEETING_TYPES.map((t) => <option key={t}>{t}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          <label className="lbl">Description</label>
+          <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} className="field" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Starts At *</label>
-            <input required type="datetime-local" value={form.startsAt} onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <label className="lbl">Starts At *</label>
+            <input required type="datetime-local" value={form.startsAt} onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))} className="field" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ends At *</label>
-            <input required type="datetime-local" value={form.endsAt} onChange={(e) => setForm((f) => ({ ...f, endsAt: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <label className="lbl">Ends At *</label>
+            <input required type="datetime-local" value={form.endsAt} onChange={(e) => setForm((f) => ({ ...f, endsAt: e.target.value }))} className="field" />
           </div>
         </div>
-
         {members && members.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Attendees <span className="text-gray-400 font-normal">({selectedMemberIds.length} selected)</span>
+            <label className="lbl">
+              Attendees
+              <span style={{ color: 'var(--tx3)', marginLeft: '6px', textTransform: 'none', letterSpacing: 0 }}>
+                ({selectedMemberIds.length} selected)
+              </span>
             </label>
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-40 overflow-y-auto">
-              {members.map((member) => (
-                <label key={member.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50">
+            <div style={{ border: '1px solid var(--bd-2)', borderRadius: '2px', maxHeight: '160px', overflowY: 'auto' }}>
+              {members.map((member, i) => (
+                <label
+                  key={member.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    borderBottom: i < members.length - 1 ? '1px solid var(--bd)' : 'none',
+                    transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-3)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                >
                   <input
                     type="checkbox"
                     checked={selectedMemberIds.includes(member.id)}
                     onChange={() => toggleMember(member.id)}
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <span className="text-sm text-gray-700">{member.userName}</span>
+                  <span style={{ color: 'var(--tx)', fontSize: '12px', flex: 1 }}>{member.userName}</span>
                   <Badge label={member.role} variant={memberRoleVariant(member.role)} />
                 </label>
               ))}
             </div>
           </div>
         )}
-
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700">Cancel</button>
-          <button type="submit" disabled={mutation.isPending}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60">
-            {mutation.isPending ? 'Creating…' : 'Create'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+          <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+          <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+            {mutation.isPending ? 'creating...' : '+ Create'}
           </button>
         </div>
       </form>
@@ -208,37 +183,24 @@ export function SprintDetailPage() {
 
   const [showCreateTicket, setShowCreateTicket] = useState(false)
   const [showCreateMeeting, setShowCreateMeeting] = useState(false)
-
   const [filterStatus, setFilterStatus] = useState<TicketStatus | ''>('')
   const [filterPriority, setFilterPriority] = useState<TicketPriority | ''>('')
   const [filterSprintStatus, setFilterSprintStatus] = useState<SprintStatus | ''>('')
   const [page, setPage] = useState(0)
 
   const { data: sprint, isLoading } = useQuery({
-    queryKey: ['sprint', sprintId],
-    queryFn: () => getSprint(sprintId!),
-    enabled: !!sprintId,
+    queryKey: ['sprint', sprintId], queryFn: () => getSprint(sprintId!), enabled: !!sprintId,
   })
-
   const ticketFilters: TicketFilters = {
-    projectId: projectId!,
-    status: filterStatus || undefined,
-    priority: filterPriority || undefined,
-    sprintStatus: filterSprintStatus || undefined,
-    page,
-    size: 20,
+    projectId: projectId!, status: filterStatus || undefined,
+    priority: filterPriority || undefined, sprintStatus: filterSprintStatus || undefined,
+    page, size: 20,
   }
-
   const { data: ticketsPage } = useQuery({
-    queryKey: ['tickets', ticketFilters],
-    queryFn: () => getTickets(ticketFilters),
-    enabled: !!projectId,
+    queryKey: ['tickets', ticketFilters], queryFn: () => getTickets(ticketFilters), enabled: !!projectId,
   })
-
   const { data: meetings } = useQuery({
-    queryKey: ['meetings', projectId],
-    queryFn: () => getMeetings(projectId!),
-    enabled: !!projectId,
+    queryKey: ['meetings', projectId], queryFn: () => getMeetings(projectId!), enabled: !!projectId,
   })
 
   const sprintMeetings = meetings?.filter((m) => m.sprintId === sprintId)
@@ -247,12 +209,10 @@ export function SprintDetailPage() {
     mutationFn: deleteTicket,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   })
-
   const deleteMeetingMutation = useMutation({
     mutationFn: deleteMeeting,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['meetings', projectId] }),
   })
-
   const updateStatusMutation = useMutation({
     mutationFn: ({ ticketId, status }: { ticketId: string; status: TicketStatus }) =>
       updateTicket(ticketId, { status }),
@@ -260,215 +220,233 @@ export function SprintDetailPage() {
   })
 
   if (isLoading) {
-    return <Layout><div className="flex items-center justify-center h-64 text-gray-400">Loading…</div></Layout>
+    return (
+      <Layout>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--tx3)', fontSize: '12px', letterSpacing: '0.06em' }}>
+          loading<span className="cursor-blink">_</span>
+        </div>
+      </Layout>
+    )
   }
 
   if (!sprint) {
-    return <Layout><div className="flex items-center justify-center h-64 text-red-500">Sprint not found</div></Layout>
+    return (
+      <Layout>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <div className="err-box">Sprint not found</div>
+        </div>
+      </Layout>
+    )
   }
+
+  const hasFilters = filterStatus || filterPriority || filterSprintStatus
 
   return (
     <Layout>
-      <div className="p-8 max-w-6xl">
-        <div className="mb-2 flex items-center gap-2 text-sm text-gray-500">
-          <button onClick={() => navigate('/projects')} className="text-indigo-600 hover:text-indigo-700">Projects</button>
+      <div style={{ padding: '22px 32px', borderBottom: '1px solid var(--bd)', background: 'rgba(20,20,31,0.97)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', fontSize: '11px', color: 'var(--tx3)' }}>
+          <button className="back" onClick={() => navigate('/projects')}>Projects</button>
           <span>/</span>
-          <button onClick={() => navigate(`/projects/${projectId}`)} className="text-indigo-600 hover:text-indigo-700">Project</button>
+          <button className="back" onClick={() => navigate(`/projects/${projectId}`)}>Project</button>
           <span>/</span>
-          <span className="text-gray-700">{sprint.name}</span>
+          <span style={{ color: 'var(--tx2)' }}>{sprint.name}</span>
         </div>
-
-        <div className="mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{sprint.name}</h1>
-            <Badge label={sprint.status} variant={sprint.status === 'ACTIVE' ? 'green' : sprint.status === 'COMPLETED' ? 'gray' : 'blue'} />
-          </div>
-          <div className="flex items-center gap-6 mt-2 text-sm text-gray-500">
-            <span>{sprint.startDate} → {sprint.endDate}</span>
-            <span>{sprint.estimationType.replace('_', ' ')}</span>
-          </div>
-          {sprint.businessGoal && (
-            <p className="mt-2 text-sm text-gray-600"><span className="font-medium">Goal:</span> {sprint.businessGoal}</p>
-          )}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#eaeaf8', letterSpacing: '-0.01em', flex: 1 }}>
+            {sprint.name}
+          </h1>
+          <Badge
+            label={sprint.status}
+            variant={sprint.status === 'ACTIVE' ? 'green' : sprint.status === 'COMPLETED' ? 'gray' : 'blue'}
+          />
         </div>
+        <div style={{ display: 'flex', gap: '20px', marginTop: '6px', color: 'var(--tx3)', fontSize: '11px', letterSpacing: '0.03em' }}>
+          <span>{sprint.startDate} → {sprint.endDate}</span>
+          <span>{sprint.estimationType.replace('_', ' ')}</span>
+        </div>
+        {sprint.businessGoal && (
+          <div style={{ marginTop: '6px', color: 'var(--tx2)', fontSize: '12px' }}>
+            <span style={{ color: 'var(--tx3)' }}>goal: </span>{sprint.businessGoal}
+          </div>
+        )}
+      </div>
 
-        <div className="space-y-8">
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Tickets
-                <span className="text-sm font-normal text-gray-400">({ticketsPage?.totalElements ?? 0})</span>
-              </h2>
-              <button onClick={() => setShowCreateTicket(true)}
-                className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                New Ticket
-              </button>
+      <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+
+        <section>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div className="sh">
+              tickets
+              <span style={{ color: 'var(--tx3)', fontSize: '10px' }}>[{ticketsPage?.totalElements ?? 0}]</span>
             </div>
+            <button onClick={() => setShowCreateTicket(true)} className="btn btn-link" style={{ fontSize: '11px' }}>
+              + new ticket
+            </button>
+          </div>
 
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as TicketStatus | ''); setPage(0) }}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">All statuses</option>
-                {TICKET_STATUSES.map((s) => <option key={s}>{s}</option>)}
-              </select>
-              <select value={filterPriority} onChange={(e) => { setFilterPriority(e.target.value as TicketPriority | ''); setPage(0) }}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">All priorities</option>
-                {TICKET_PRIORITIES.map((p) => <option key={p}>{p}</option>)}
-              </select>
-              <select value={filterSprintStatus} onChange={(e) => { setFilterSprintStatus(e.target.value as SprintStatus | ''); setPage(0) }}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">All sprint statuses</option>
-                {SPRINT_STATUSES.map((s) => <option key={s}>{s}</option>)}
-              </select>
-              {(filterStatus || filterPriority || filterSprintStatus) && (
-                <button onClick={() => { setFilterStatus(''); setFilterPriority(''); setFilterSprintStatus(''); setPage(0) }}
-                  className="text-sm text-gray-500 hover:text-gray-700 underline">
-                  Clear filters
-                </button>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as TicketStatus | ''); setPage(0) }} className="field-sm">
+              <option value="">All statuses</option>
+              {TICKET_STATUSES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <select value={filterPriority} onChange={(e) => { setFilterPriority(e.target.value as TicketPriority | ''); setPage(0) }} className="field-sm">
+              <option value="">All priorities</option>
+              {TICKET_PRIORITIES.map((p) => <option key={p}>{p}</option>)}
+            </select>
+            <select value={filterSprintStatus} onChange={(e) => { setFilterSprintStatus(e.target.value as SprintStatus | ''); setPage(0) }} className="field-sm">
+              <option value="">All sprint statuses</option>
+              {SPRINT_STATUSES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+            {hasFilters && (
+              <button
+                onClick={() => { setFilterStatus(''); setFilterPriority(''); setFilterSprintStatus(''); setPage(0) }}
+                className="btn-link"
+                style={{ fontSize: '11px', padding: '3px 0' }}
+              >
+                clear ×
+              </button>
+            )}
+          </div>
+
+          {ticketsPage && ticketsPage.content.length === 0 ? (
+            <div style={{ color: 'var(--tx3)', fontSize: '12px', padding: '16px 0' }}>No tickets found.</div>
+          ) : (
+            <div className="card" style={{ overflow: 'hidden' }}>
+              <table className="dt">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Est.</th>
+                    <th style={{ width: '40px' }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ticketsPage?.content.map((ticket) => (
+                    <tr key={ticket.id}>
+                      <td>
+                        <Link
+                          to={`/tickets/${ticket.id}?projectId=${projectId}`}
+                          style={{ color: '#e4e4f4', fontWeight: '500', fontSize: '12px' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--ac)' }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#e4e4f4' }}
+                        >
+                          {ticket.title}
+                        </Link>
+                        {ticket.description && (
+                          <div style={{ color: 'var(--tx3)', fontSize: '11px', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '320px' }}>
+                            {ticket.description}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          value={ticket.status}
+                          onChange={(e) => updateStatusMutation.mutate({ ticketId: ticket.id, status: e.target.value as TicketStatus })}
+                          className="field-sm"
+                        >
+                          {TICKET_STATUSES.map((s) => <option key={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td>
+                        <Badge label={ticket.priority} variant={ticketPriorityVariant(ticket.priority)} />
+                      </td>
+                      <td style={{ color: 'var(--tx3)', fontSize: '11px' }}>{ticket.estimation ?? '—'}</td>
+                      <td>
+                        <button onClick={() => deleteTicketMutation.mutate(ticket.id)} className="btn-ghost" style={{ padding: '4px' }}>
+                          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+                            <path d="M1 2.5h9M4 1h3M2.5 2.5l.5 7h5l.5-7" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {ticketsPage && ticketsPage.totalPages > 1 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 16px',
+                  borderTop: '1px solid var(--bd)',
+                  background: 'var(--bg-3)',
+                }}>
+                  <span style={{ color: 'var(--tx3)', fontSize: '11px', letterSpacing: '0.03em' }}>
+                    page {page + 1} / {ticketsPage.totalPages} · {ticketsPage.totalElements} total
+                  </span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="btn btn-outline" style={{ padding: '4px 10px', fontSize: '11px' }}>
+                      ←
+                    </button>
+                    <button disabled={page >= ticketsPage.totalPages - 1} onClick={() => setPage((p) => p + 1)} className="btn btn-outline" style={{ padding: '4px 10px', fontSize: '11px' }}>
+                      →
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
+          )}
+        </section>
 
-            {ticketsPage && ticketsPage.content.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4">No tickets found.</p>
-            ) : (
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Title</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Priority</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Est.</th>
-                      <th className="px-4 py-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {ticketsPage?.content.map((ticket) => (
-                      <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <Link to={`/tickets/${ticket.id}?projectId=${projectId}`}
-                            className="font-medium text-gray-900 hover:text-indigo-700 transition-colors">
-                            {ticket.title}
-                          </Link>
-                          {ticket.description && (
-                            <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{ticket.description}</p>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={ticket.status}
-                            onChange={(e) => updateStatusMutation.mutate({ ticketId: ticket.id, status: e.target.value as TicketStatus })}
-                            className="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                          >
-                            {TICKET_STATUSES.map((s) => <option key={s}>{s}</option>)}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge label={ticket.priority} variant={ticketPriorityVariant(ticket.priority)} />
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">{ticket.estimation ?? '—'}</td>
-                        <td className="px-4 py-3">
-                          <button onClick={() => deleteTicketMutation.mutate(ticket.id)}
-                            className="text-gray-300 hover:text-red-500 transition-colors">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {ticketsPage && ticketsPage.totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
-                    <p className="text-sm text-gray-500">
-                      Page {page + 1} of {ticketsPage.totalPages} · {ticketsPage.totalElements} total
-                    </p>
-                    <div className="flex gap-2">
-                      <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-100">
-                        Prev
-                      </button>
-                      <button disabled={page >= ticketsPage.totalPages - 1} onClick={() => setPage((p) => p + 1)}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-100">
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Meetings
-                <span className="text-sm font-normal text-gray-400">({sprintMeetings?.length ?? 0})</span>
-              </h2>
-              <button onClick={() => setShowCreateMeeting(true)}
-                className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                New Meeting
-              </button>
+        <section>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div className="sh">
+              meetings
+              <span style={{ color: 'var(--tx3)', fontSize: '10px' }}>[{sprintMeetings?.length ?? 0}]</span>
             </div>
+            <button onClick={() => setShowCreateMeeting(true)} className="btn btn-link" style={{ fontSize: '11px' }}>
+              + new meeting
+            </button>
+          </div>
 
-            {sprintMeetings && sprintMeetings.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4">No meetings for this sprint.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {sprintMeetings?.map((meeting) => (
-                  <div key={meeting.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{meeting.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge label={meeting.type} variant="blue" />
-                          <span className="text-xs text-gray-400">
-                            {new Date(meeting.startsAt).toLocaleString()} – {new Date(meeting.endsAt).toLocaleTimeString()}
-                          </span>
-                        </div>
+          {sprintMeetings && sprintMeetings.length === 0 ? (
+            <div style={{ color: 'var(--tx3)', fontSize: '12px', padding: '16px 0' }}>No meetings for this sprint.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '10px' }}>
+              {sprintMeetings?.map((meeting) => (
+                <div key={meeting.id} className="card" style={{ padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ color: '#e4e4f4', fontSize: '13px', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {meeting.title}
                       </div>
-                      <button onClick={() => deleteMeetingMutation.mutate(meeting.id)}
-                        className="text-gray-300 hover:text-red-500 transition-colors ml-2">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px', flexWrap: 'wrap' }}>
+                        <Badge label={meeting.type} variant="blue" />
+                        <span style={{ color: 'var(--tx3)', fontSize: '11px' }}>
+                          {new Date(meeting.startsAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-
-                    {meeting.members.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-xs text-gray-500 mb-1.5">Attendees ({meeting.members.length}):</p>
-                        <div className="flex flex-wrap gap-1">
-                          {meeting.members.map((m) => (
-                            <span key={m.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-700">
-                              {m.userName}
-                              <Badge label={m.role} variant={memberRoleVariant(m.role)} />
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <button onClick={() => deleteMeetingMutation.mutate(meeting.id)} className="btn-ghost" style={{ padding: '3px', flexShrink: 0 }}>
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+                        <path d="M1 2.5h9M4 1h3M2.5 2.5l.5 7h5l.5-7" />
+                      </svg>
+                    </button>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
+                  {meeting.members.length > 0 && (
+                    <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--bd)' }}>
+                      <div style={{ color: 'var(--tx3)', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '5px' }}>
+                        attendees ({meeting.members.length})
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {meeting.members.map((m) => (
+                          <span key={m.id} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '5px',
+                            background: 'var(--bg)', border: '1px solid var(--bd)',
+                            borderRadius: '2px', padding: '2px 7px', fontSize: '11px', color: 'var(--tx2)',
+                          }}>
+                            {m.userName}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
       {showCreateTicket && sprintId && projectId && (

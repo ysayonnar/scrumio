@@ -11,34 +11,48 @@ function ProjectCard({ project, onDelete }: { project: ProjectResponse; onDelete
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group"
+      className="card"
+      style={{
+        padding: '16px 18px',
+        cursor: 'pointer',
+        borderLeft: '2px solid var(--bd)',
+        transition: 'border-color 0.15s, border-left-color 0.15s',
+        position: 'relative',
+      }}
       onClick={() => navigate(`/projects/${project.id}`)}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderLeftColor = 'var(--ac)' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderLeftColor = 'var(--bd)' }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors truncate">
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ color: '#eaeaf8', fontSize: '13px', fontWeight: '600', letterSpacing: '0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {project.name}
-          </h3>
+          </div>
           {project.description && (
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.description}</p>
+            <div style={{ color: 'var(--tx2)', fontSize: '12px', marginTop: '4px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {project.description}
+            </div>
           )}
         </div>
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(project.id)
-          }}
-          className="shrink-0 text-gray-300 hover:text-red-500 transition-colors p-1"
+          onClick={(e) => { e.stopPropagation(); onDelete(project.id) }}
+          className="btn-ghost"
           title="Delete project"
+          style={{ flexShrink: 0 }}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+            <path d="M1 3h10M4.5 1.5h3M2 3l.6 7.5A1 1 0 003.6 11.5h4.8a1 1 0 001-.9L10 3" />
           </svg>
         </button>
       </div>
-      <p className="text-xs text-gray-400 mt-3">
-        Created {new Date(project.createdAt).toLocaleDateString()}
-      </p>
+      <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--bd)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ color: 'var(--tx3)', fontSize: '11px', letterSpacing: '0.04em' }}>
+          {new Date(project.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+        </span>
+        <span style={{ color: 'var(--ac)', fontSize: '10px', letterSpacing: '0.1em' }}>
+          VIEW →
+        </span>
+      </div>
     </div>
   )
 }
@@ -51,10 +65,7 @@ function CreateProjectModal({ onClose }: { onClose: () => void }) {
 
   const mutation = useMutation({
     mutationFn: createProject,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] })
-      onClose()
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['projects'] }); onClose() },
     onError: () => setError('Failed to create project'),
   })
 
@@ -66,40 +77,20 @@ function CreateProjectModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title="New Project" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{error}</div>
-        )}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {error && <div className="err-box">{error}</div>}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="My Project"
-          />
+          <label className="lbl">Name *</label>
+          <input required value={name} onChange={(e) => setName(e.target.value)} className="field" placeholder="Project name" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-            placeholder="Optional description"
-          />
+          <label className="lbl">Description</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="field" placeholder="Optional description" />
         </div>
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60"
-          >
-            {mutation.isPending ? 'Creating…' : 'Create'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+          <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+          <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+            {mutation.isPending ? 'creating...' : '+ Create'}
           </button>
         </div>
       </form>
@@ -117,64 +108,73 @@ export function ProjectsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
   })
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-400">Loading projects…</div>
-        </div>
-      </Layout>
-    )
-  }
-
-  if (error) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-red-500">Failed to load projects</div>
-        </div>
-      </Layout>
-    )
-  }
+  const empty = !isLoading && !error && projects?.length === 0
 
   return (
     <Layout>
-      <div className="p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{projects?.length ?? 0} projects</p>
+      <div className="grid-bg" style={{ minHeight: '100%' }}>
+        <div style={{ padding: '28px 32px', borderBottom: '1px solid var(--bd)', background: 'rgba(20,20,31,0.95)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <div>
+              <div className="sh" style={{ marginBottom: '6px' }}>projects</div>
+              <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#eaeaf8', letterSpacing: '-0.01em' }}>
+                Workspace
+              </h1>
+              <div style={{ color: 'var(--tx3)', fontSize: '11px', marginTop: '2px', letterSpacing: '0.04em' }}>
+                {projects?.length ?? 0} project{(projects?.length ?? 0) !== 1 ? 's' : ''} found
+              </div>
+            </div>
+            <button onClick={() => setShowCreate(true)} className="btn btn-primary">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M5.5 1v9M1 5.5h9" />
+              </svg>
+              New Project
+            </button>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Project
-          </button>
         </div>
 
-        {projects && projects.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-            <p className="font-medium">No projects yet</p>
-            <p className="text-sm mt-1">Create your first project to get started</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects?.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onDelete={(id) => deleteMutation.mutate(id)}
-              />
-            ))}
-          </div>
-        )}
+        <div style={{ padding: '28px 32px' }}>
+          {isLoading && (
+            <div style={{ color: 'var(--tx3)', fontSize: '12px', letterSpacing: '0.06em' }}>
+              loading<span className="cursor-blink">_</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="err-box">Failed to load projects</div>
+          )}
+
+          {empty && (
+            <div style={{ textAlign: 'center', padding: '64px 20px' }}>
+              <div style={{ color: 'var(--tx3)', fontSize: '32px', marginBottom: '12px', letterSpacing: '-0.02em', fontWeight: '700' }}>
+                []
+              </div>
+              <div style={{ color: 'var(--tx2)', fontSize: '13px' }}>No projects yet</div>
+              <div style={{ color: 'var(--tx3)', fontSize: '12px', marginTop: '4px' }}>
+                Create your first project to get started
+              </div>
+              <button onClick={() => setShowCreate(true)} className="btn btn-outline" style={{ marginTop: '20px' }}>
+                + New Project
+              </button>
+            </div>
+          )}
+
+          {projects && projects.length > 0 && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '12px',
+            }}>
+              {projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} />}

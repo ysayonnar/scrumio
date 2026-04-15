@@ -17,28 +17,19 @@ const MEMBER_ROLES: ProjectMemberRole[] = ['OWNER', 'MANAGER', 'DEVELOPER', 'STA
 function CreateSprintModal({ projectId, onClose }: { projectId: string; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<SprintPayload>({
-    name: '',
-    businessGoal: '',
-    devPlan: '',
-    startDate: '',
-    endDate: '',
-    status: 'PLANNED',
-    estimationType: 'STORY_POINTS',
-    projectId,
+    name: '', businessGoal: '', devPlan: '',
+    startDate: '', endDate: '', status: 'PLANNED',
+    estimationType: 'STORY_POINTS', projectId,
   })
   const [error, setError] = useState('')
 
   const mutation = useMutation({
     mutationFn: createSprint,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sprints', projectId] })
-      onClose()
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sprints', projectId] }); onClose() },
     onError: (err) => setError(getApiError(err, 'Failed to create sprint')),
   })
 
-  const set = (field: keyof SprintPayload, value: string) =>
-    setForm((f) => ({ ...f, [field]: value }))
+  const set = (field: keyof SprintPayload, value: string) => setForm((f) => ({ ...f, [field]: value }))
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -52,56 +43,48 @@ function CreateSprintModal({ projectId, onClose }: { projectId: string; onClose:
 
   return (
     <Modal title="New Sprint" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{error}</div>}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {error && <div className="err-box">{error}</div>}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input required value={form.name} onChange={(e) => set('name', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="lbl">Name *</label>
+          <input required value={form.name} onChange={(e) => set('name', e.target.value)} className="field" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Business Goal</label>
-          <textarea value={form.businessGoal} onChange={(e) => set('businessGoal', e.target.value)} rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          <label className="lbl">Business Goal</label>
+          <textarea value={form.businessGoal} onChange={(e) => set('businessGoal', e.target.value)} rows={2} className="field" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Dev Plan</label>
-          <textarea value={form.devPlan} onChange={(e) => set('devPlan', e.target.value)} rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          <label className="lbl">Dev Plan</label>
+          <textarea value={form.devPlan} onChange={(e) => set('devPlan', e.target.value)} rows={2} className="field" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-            <input required type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <label className="lbl">Start Date *</label>
+            <input required type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} className="field" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-            <input required type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <label className="lbl">End Date *</label>
+            <input required type="date" value={form.endDate} onChange={(e) => set('endDate', e.target.value)} className="field" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select value={form.status} onChange={(e) => set('status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <label className="lbl">Status</label>
+            <select value={form.status} onChange={(e) => set('status', e.target.value)} className="field">
               {SPRINT_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estimation</label>
-            <select value={form.estimationType} onChange={(e) => set('estimationType', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <label className="lbl">Estimation</label>
+            <select value={form.estimationType} onChange={(e) => set('estimationType', e.target.value)} className="field">
               {ESTIMATION_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
         </div>
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">Cancel</button>
-          <button type="submit" disabled={mutation.isPending}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60">
-            {mutation.isPending ? 'Creating…' : 'Create'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+          <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+          <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+            {mutation.isPending ? 'creating...' : '+ Create'}
           </button>
         </div>
       </form>
@@ -117,41 +100,28 @@ function AddMemberModal({ projectId, onClose }: { projectId: string; onClose: ()
 
   const mutation = useMutation({
     mutationFn: () => addProjectMember(projectId, { userId, role }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['members', projectId] })
-      onClose()
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members', projectId] }); onClose() },
     onError: (err) => setError(getApiError(err, 'Failed to add member. Check the user ID.')),
   })
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    setError('')
-    mutation.mutate()
-  }
-
   return (
     <Modal title="Add Member" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{error}</div>}
+      <form onSubmit={(e) => { e.preventDefault(); setError(''); mutation.mutate() }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {error && <div className="err-box">{error}</div>}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">User ID *</label>
-          <input required value={userId} onChange={(e) => setUserId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="UUID of the user" />
+          <label className="lbl">User ID *</label>
+          <input required value={userId} onChange={(e) => setUserId(e.target.value)} className="field" placeholder="UUID of the user" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value as ProjectMemberRole)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <label className="lbl">Role</label>
+          <select value={role} onChange={(e) => setRole(e.target.value as ProjectMemberRole)} className="field">
             {MEMBER_ROLES.map((r) => <option key={r}>{r}</option>)}
           </select>
         </div>
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">Cancel</button>
-          <button type="submit" disabled={mutation.isPending}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60">
-            {mutation.isPending ? 'Adding…' : 'Add Member'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+          <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+          <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+            {mutation.isPending ? 'adding...' : '+ Add Member'}
           </button>
         </div>
       </form>
@@ -168,30 +138,24 @@ function EditProjectModal({ projectId, initialName, initialDesc, onClose }: {
 
   const mutation = useMutation({
     mutationFn: () => updateProject(projectId, { name, description }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      onClose()
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['project', projectId] }); onClose() },
   })
 
   return (
     <Modal title="Edit Project" onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate() }} className="space-y-4">
+      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate() }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="lbl">Name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} className="field" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          <label className="lbl">Description</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="field" />
         </div>
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700">Cancel</button>
-          <button type="submit" disabled={mutation.isPending}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60">
-            {mutation.isPending ? 'Saving…' : 'Save'}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '6px' }}>
+          <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+          <button type="submit" disabled={mutation.isPending} className="btn btn-primary">
+            {mutation.isPending ? 'saving...' : 'Save'}
           </button>
         </div>
       </form>
@@ -208,33 +172,23 @@ export function ProjectDetailPage() {
   const [showEdit, setShowEdit] = useState(false)
 
   const { data: project, isLoading: projectLoading } = useQuery({
-    queryKey: ['project', id],
-    queryFn: () => getProject(id!),
-    enabled: !!id,
+    queryKey: ['project', id], queryFn: () => getProject(id!), enabled: !!id,
   })
-
   const { data: sprints } = useQuery({
-    queryKey: ['sprints', id],
-    queryFn: () => getSprints(id!),
-    enabled: !!id,
+    queryKey: ['sprints', id], queryFn: () => getSprints(id!), enabled: !!id,
   })
-
   const { data: members } = useQuery({
-    queryKey: ['members', id],
-    queryFn: () => getProjectMembers(id!),
-    enabled: !!id,
+    queryKey: ['members', id], queryFn: () => getProjectMembers(id!), enabled: !!id,
   })
 
   const deleteSprintMutation = useMutation({
     mutationFn: deleteSprint,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sprints', id] }),
   })
-
   const removeMemberMutation = useMutation({
     mutationFn: (memberId: string) => removeProjectMember(id!, memberId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members', id] }),
   })
-
   const updateRoleMutation = useMutation({
     mutationFn: ({ memberId, role }: { memberId: string; role: ProjectMemberRole }) =>
       updateProjectMemberRole(id!, memberId, role),
@@ -244,7 +198,9 @@ export function ProjectDetailPage() {
   if (projectLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64 text-gray-400">Loading…</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--tx3)', fontSize: '12px', letterSpacing: '0.06em' }}>
+          loading<span className="cursor-blink">_</span>
+        </div>
       </Layout>
     )
   }
@@ -252,153 +208,160 @@ export function ProjectDetailPage() {
   if (!project) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64 text-red-500">Project not found</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <div className="err-box">Project not found</div>
+        </div>
       </Layout>
     )
   }
 
   return (
     <Layout>
-      <div className="p-8 max-w-5xl">
-        <div className="mb-2">
-          <button onClick={() => navigate('/projects')} className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Projects
-          </button>
-        </div>
-
-        <div className="flex items-start justify-between mb-8">
+      <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--bd)', background: 'rgba(20,20,31,0.97)' }}>
+        <button className="back" onClick={() => navigate('/projects')} style={{ marginBottom: '10px' }}>
+          ← Projects
+        </button>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-            {project.description && <p className="text-gray-500 mt-1">{project.description}</p>}
-            <p className="text-xs text-gray-400 mt-2">ID: {project.id}</p>
+            <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#eaeaf8', letterSpacing: '-0.01em' }}>
+              {project.name}
+            </h1>
+            {project.description && (
+              <div style={{ color: 'var(--tx2)', fontSize: '12px', marginTop: '4px' }}>
+                {project.description}
+              </div>
+            )}
+            <div style={{ color: 'var(--tx3)', fontSize: '10px', marginTop: '6px', letterSpacing: '0.04em' }}>
+              ID: {project.id}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to={`/projects/${id}/board`}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <Link to={`/projects/${id}/board`} className="btn btn-outline">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                <rect x="1" y="2" width="2" height="8" rx="0.5" />
+                <rect x="5" y="2" width="2" height="8" rx="0.5" />
+                <rect x="9" y="2" width="2" height="8" rx="0.5" />
               </svg>
               Board
             </Link>
-            <button onClick={() => setShowEdit(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <button onClick={() => setShowEdit(true)} className="btn btn-outline">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8.5 1.5l2 2L4 10 1.5 10.5 2 8 8.5 1.5z" />
               </svg>
               Edit
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Sprints
-                  <span className="text-sm font-normal text-gray-400">({sprints?.length ?? 0})</span>
-                </h2>
-                <button onClick={() => setShowCreateSprint(true)}
-                  className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  New Sprint
-                </button>
-              </div>
+      <div style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 280px', gap: '32px', alignItems: 'start' }}>
 
-              {sprints && sprints.length === 0 ? (
-                <p className="text-sm text-gray-400 py-4">No sprints yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {sprints?.map((sprint) => (
-                    <div key={sprint.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:shadow-sm transition-all">
-                      <div className="flex items-start justify-between">
-                        <Link to={`/projects/${id}/sprints/${sprint.id}`}
-                          className="font-medium text-gray-900 hover:text-indigo-700 transition-colors flex-1 min-w-0">
-                          {sprint.name}
-                        </Link>
-                        <div className="flex items-center gap-2 ml-3">
-                          <Badge label={sprint.status} variant={sprintStatusVariant(sprint.status)} />
-                          <button onClick={() => deleteSprintMutation.mutate(sprint.id)}
-                            className="text-gray-300 hover:text-red-500 transition-colors">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      {sprint.businessGoal && (
-                        <p className="text-sm text-gray-500 mt-1 truncate">{sprint.businessGoal}</p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                        <span>{sprint.startDate} → {sprint.endDate}</span>
-                        <span>{sprint.estimationType.replace('_', ' ')}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+        <section>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div className="sh">
+              sprints
+              <span style={{ color: 'var(--tx3)', fontSize: '10px' }}>
+                [{sprints?.length ?? 0}]
+              </span>
+            </div>
+            <button onClick={() => setShowCreateSprint(true)} className="btn btn-link" style={{ fontSize: '11px' }}>
+              + new sprint
+            </button>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Members
-                <span className="text-sm font-normal text-gray-400">({members?.length ?? 0})</span>
-              </h2>
-              <button onClick={() => setShowAddMember(true)}
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                + Add
-              </button>
+          {sprints && sprints.length === 0 ? (
+            <div style={{ color: 'var(--tx3)', fontSize: '12px', padding: '16px 0' }}>
+              No sprints yet.
             </div>
-
-            <div className="space-y-2">
-              {members?.map((member) => (
-                <div key={member.id} className="bg-white border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{member.userName}</p>
-                      <p className="text-xs text-gray-400 truncate">{member.userId}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <select
-                        value={member.role}
-                        onChange={(e) => updateRoleMutation.mutate({ memberId: member.id, role: e.target.value as ProjectMemberRole })}
-                        className="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      >
-                        {MEMBER_ROLES.map((r) => <option key={r}>{r}</option>)}
-                      </select>
-                      <button onClick={() => removeMemberMutation.mutate(member.id)}
-                        className="text-gray-300 hover:text-red-500 transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {sprints?.map((sprint) => (
+                <div key={sprint.id} className="card" style={{ padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+                    <Link
+                      to={`/projects/${id}/sprints/${sprint.id}`}
+                      style={{ color: '#e4e4f4', fontSize: '13px', fontWeight: '500', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--ac)' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#e4e4f4' }}
+                    >
+                      {sprint.name}
+                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <Badge label={sprint.status} variant={sprintStatusVariant(sprint.status)} />
+                      <button onClick={() => deleteSprintMutation.mutate(sprint.id)} className="btn-ghost" style={{ padding: '3px' }}>
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+                          <path d="M1 2.5h9M4 1h3M2.5 2.5l.5 7h5l.5-7" />
                         </svg>
                       </button>
                     </div>
                   </div>
-                  <div className="mt-1.5">
-                    <Badge label={member.role} variant={memberRoleVariant(member.role)} />
+                  {sprint.businessGoal && (
+                    <div style={{ color: 'var(--tx2)', fontSize: '11px', marginTop: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {sprint.businessGoal}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '8px', color: 'var(--tx3)', fontSize: '11px', letterSpacing: '0.03em' }}>
+                    <span>{sprint.startDate} → {sprint.endDate}</span>
+                    <span>{sprint.estimationType.replace('_', ' ')}</span>
                   </div>
                 </div>
               ))}
-              {members && members.length === 0 && (
-                <p className="text-sm text-gray-400 py-2">No members yet.</p>
-              )}
             </div>
+          )}
+        </section>
+
+        <aside>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div className="sh">
+              members
+              <span style={{ color: 'var(--tx3)', fontSize: '10px' }}>
+                [{members?.length ?? 0}]
+              </span>
+            </div>
+            <button onClick={() => setShowAddMember(true)} className="btn btn-link" style={{ fontSize: '11px' }}>
+              + add
+            </button>
           </div>
-        </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {members?.map((member) => (
+              <div key={member.id} className="card" style={{ padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ color: '#e4e4f4', fontSize: '12px', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {member.userName}
+                    </div>
+                    <div style={{ color: 'var(--tx3)', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
+                      {member.userId.slice(0, 8)}...
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    <select
+                      value={member.role}
+                      onChange={(e) => updateRoleMutation.mutate({ memberId: member.id, role: e.target.value as ProjectMemberRole })}
+                      className="field-sm"
+                    >
+                      {MEMBER_ROLES.map((r) => <option key={r}>{r}</option>)}
+                    </select>
+                    <button onClick={() => removeMemberMutation.mutate(member.id)} className="btn-ghost" style={{ padding: '3px' }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                        <path d="M1 1l8 8M9 1L1 9" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div style={{ marginTop: '7px' }}>
+                  <Badge label={member.role} variant={memberRoleVariant(member.role)} />
+                </div>
+              </div>
+            ))}
+            {members && members.length === 0 && (
+              <div style={{ color: 'var(--tx3)', fontSize: '12px', padding: '8px 0' }}>
+                No members yet.
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
 
       {showCreateSprint && <CreateSprintModal projectId={id!} onClose={() => setShowCreateSprint(false)} />}

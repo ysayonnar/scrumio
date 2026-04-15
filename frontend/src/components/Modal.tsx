@@ -8,21 +8,42 @@ interface ModalProps {
 
 export function Modal({ title, onClose, children }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{ position: 'absolute', inset: 0, background: 'rgba(4,4,10,0.88)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}
+      />
+      <div style={{
+        position: 'relative',
+        background: '#1c1c2c',
+        border: '1px solid #3c3c5c',
+        borderRadius: '2px',
+        width: '100%',
+        maxWidth: '480px',
+        margin: '0 16px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(200,255,74,0.04)',
+        animation: 'slideUp 0.2s ease forwards',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '13px 20px',
+          borderBottom: '1px solid #2e2e48',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: 'var(--ac)', fontSize: '11px', fontWeight: '600' }}>//</span>
+            <span style={{ color: '#e4e4f4', fontSize: '13px', fontWeight: '600', letterSpacing: '0.01em' }}>{title}</span>
+          </div>
+          <button onClick={onClose} className="btn-ghost" style={{ padding: '4px' }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M1 1l11 11M12 1L1 12" />
             </svg>
           </button>
         </div>
-        <div className="px-6 py-4">{children}</div>
+        <div style={{ padding: '20px' }}>
+          {children}
+        </div>
       </div>
     </div>
   )
