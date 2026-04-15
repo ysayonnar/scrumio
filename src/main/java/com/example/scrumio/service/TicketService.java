@@ -74,13 +74,14 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public Page<TicketResponse> getAll(UUID projectId, UUID userId, TicketStatus status, TicketPriority priority,
-                                       SprintStatus sprintStatus, Pageable pageable) {
+                                       SprintStatus sprintStatus, UUID sprintId, Pageable pageable) {
         verifyMembership(projectId, userId);
         TicketCacheKey cacheKey = new TicketCacheKey(
                 projectId,
                 status != null ? status.name() : null,
                 priority != null ? priority.name() : null,
                 sprintStatus != null ? sprintStatus.name() : null,
+                sprintId,
                 pageable.getPageNumber(),
                 pageable.getPageSize()
         );
@@ -91,7 +92,7 @@ public class TicketService {
         }
         LOG.info("[CACHE MISS] key={}", cacheKey.hashCode());
         Page<TicketResponse> result =
-                ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus, pageable)
+                ticketRepository.findAllActiveByProjectId(projectId, status, priority, sprintStatus, sprintId, pageable)
                         .map(mapper::toResponse);
         cacheIndex.put(cacheKey, result);
         return result;

@@ -6,6 +6,7 @@ export interface TicketFilters {
   status?: TicketStatus
   priority?: TicketPriority
   sprintStatus?: SprintStatus
+  sprintId?: string
   page?: number
   size?: number
 }
@@ -18,6 +19,7 @@ export const getTickets = (filters: TicketFilters) =>
         status: filters.status || undefined,
         priority: filters.priority || undefined,
         sprint_status: filters.sprintStatus || undefined,
+        sprint_id: filters.sprintId || undefined,
         page: filters.page ?? 0,
         size: filters.size ?? 20,
       },

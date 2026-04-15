@@ -1,11 +1,16 @@
 server {
-    listen 80;
+    listen ${PORT};
 
     root /usr/share/nginx/html;
     index index.html;
 
+    resolver 127.0.0.11 8.8.8.8 valid=30s ipv6=off;
+
+    set $backend_url ${BACKEND_URL};
+    set $auth_service_url ${AUTH_SERVICE_URL};
+
     location /api/ {
-        proxy_pass ${BACKEND_URL};
+        proxy_pass $backend_url;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -13,7 +18,7 @@ server {
     }
 
     location ~ ^/(login|registration|logout) {
-        proxy_pass ${AUTH_SERVICE_URL};
+        proxy_pass $auth_service_url;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

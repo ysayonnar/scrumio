@@ -26,11 +26,13 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             + "WHERE t.deletedAt IS NULL AND t.project.id = :projectId "
             + "AND (CAST(:status AS String) IS NULL OR t.status = :status) "
             + "AND (CAST(:priority AS String) IS NULL OR t.priority = :priority) "
-            + "AND (CAST(:sprintStatus AS String) IS NULL OR s.status = :sprintStatus)")
+            + "AND (CAST(:sprintStatus AS String) IS NULL OR s.status = :sprintStatus) "
+            + "AND (:sprintId IS NULL OR s.id = :sprintId)")
     Page<Ticket> findAllActiveByProjectId(@Param("projectId") UUID projectId,
                                           @Param("status") TicketStatus status,
                                           @Param("priority") TicketPriority priority,
                                           @Param("sprintStatus") SprintStatus sprintStatus,
+                                          @Param("sprintId") UUID sprintId,
                                           Pageable pageable);
 
     @Query("SELECT t FROM Ticket t JOIN FETCH t.project LEFT JOIN FETCH t.sprint "

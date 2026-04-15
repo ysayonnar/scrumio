@@ -16,6 +16,5 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o app ./cmd/
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/app .
-COPY --from=builder /app/.env .
 
 CMD [ "./app" ]

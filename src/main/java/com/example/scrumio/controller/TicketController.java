@@ -57,9 +57,10 @@ public class TicketController {
                                        @RequestParam(required = false) TicketStatus status,
                                        @RequestParam(required = false) TicketPriority priority,
                                        @RequestParam(name = "sprint_status", required = false) SprintStatus sprintStatus,
+                                       @RequestParam(name = "sprint_id", required = false) UUID sprintId,
                                        @RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "10") int size) {
-        return service.getAll(projectId, AuthContext.getUserId(), status, priority, sprintStatus, PageRequest.of(page, size));
+        return service.getAll(projectId, AuthContext.getUserId(), status, priority, sprintStatus, sprintId, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Get paginated tickets using native query")

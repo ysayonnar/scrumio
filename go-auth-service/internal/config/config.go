@@ -20,7 +20,7 @@ type Config struct {
 
 type Server struct {
 	Host            string        `env:"HOST"`
-	Port            int           `env:"APP_PORT"`
+	Port            int           `env:"PORT"`
 	ReadTimeout     time.Duration `env:"READ_TIMEOUT"`
 	WriteTimeout    time.Duration `env:"WRITE_TIMEOUT"`
 	IdleTimeout     time.Duration `env:"IDLE_TIMEOUT"`

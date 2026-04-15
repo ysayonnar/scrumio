@@ -209,6 +209,7 @@ export function SprintDetailPage() {
   const ticketFilters: TicketFilters = {
     projectId: projectId!, status: filterStatus || undefined,
     priority: filterPriority || undefined, sprintStatus: filterSprintStatus || undefined,
+    sprintId: sprintId!,
     page, size: 20,
   }
   const { data: ticketsPage } = useQuery({
