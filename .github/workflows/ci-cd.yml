@@ -123,8 +123,6 @@ jobs:
     needs: build-and-push
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
