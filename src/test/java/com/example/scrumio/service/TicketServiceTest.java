@@ -133,10 +133,10 @@ class TicketServiceTest {
             Page<TicketResponse> cached = new PageImpl<>(List.of(stubResponse(UUID.randomUUID())));
             when(cacheIndex.get(any(TicketCacheKey.class))).thenReturn(Optional.of(cached));
 
-            Page<TicketResponse> result = service.getAll(projectId, userId, null, null, null, pageable);
+            Page<TicketResponse> result = service.getAll(projectId, userId, null, null, null, null, pageable);
 
             assertEquals(cached, result);
-            verify(ticketRepository, never()).findAllActiveByProjectId(any(), any(), any(), any(), any());
+            verify(ticketRepository, never()).findAllActiveByProjectId(any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -146,11 +146,11 @@ class TicketServiceTest {
             Ticket ticket = stubTicket(UUID.randomUUID());
             Page<Ticket> dbPage = new PageImpl<>(List.of(ticket));
             when(cacheIndex.get(any(TicketCacheKey.class))).thenReturn(Optional.empty());
-            when(ticketRepository.findAllActiveByProjectId(eq(projectId), any(), any(), any(), eq(pageable)))
+            when(ticketRepository.findAllActiveByProjectId(eq(projectId), any(), any(), any(), any(), eq(pageable)))
                     .thenReturn(dbPage);
             when(mapper.toResponse(ticket)).thenReturn(stubResponse(ticket.getId()));
 
-            Page<TicketResponse> result = service.getAll(projectId, userId, TicketStatus.TODO, TicketPriority.HIGH, SprintStatus.ACTIVE, pageable);
+            Page<TicketResponse> result = service.getAll(projectId, userId, TicketStatus.TODO, TicketPriority.HIGH, SprintStatus.ACTIVE, null, pageable);
 
             assertNotNull(result);
             verify(cacheIndex).put(any(TicketCacheKey.class), any());
@@ -164,7 +164,7 @@ class TicketServiceTest {
             Pageable pageable = PageRequest.of(0, 10);
 
             assertThrows(ProjectNotFoundException.class,
-                    () -> service.getAll(projectId, userId, null, null, null, pageable));
+                    () -> service.getAll(projectId, userId, null, null, null, null, pageable));
         }
     }
 
