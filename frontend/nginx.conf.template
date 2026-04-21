@@ -4,7 +4,7 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    resolver 8.8.8.8 1.1.1.1 valid=30s ipv6=off;
+    resolver ${RESOLVER} valid=30s ipv6=off;
 
     set $backend_url ${BACKEND_URL};
     set $auth_service_url ${AUTH_SERVICE_URL};
